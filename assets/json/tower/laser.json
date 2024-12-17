@@ -1,0 +1,46 @@
+{
+  "id": "tower.laser",
+  "name": "Laser Tower",
+  "description": "The Fiber Laser Tower emits a focused beam of searing energy with pinpoint accuracy. Its high-efficiency design allows for rapid cooldown and continuous firing.",
+  "assetType": "TOWER",
+  "menuIcon": "visual/tower/icon/laser.png",
+  "texture": "visual/tower/laser.png",
+  "shotSound": "sound/tower/placeholder.mp3",
+  "damageType": "heat",
+  "targeting": "single",
+  "levels": [
+    {
+      "level": 1,
+      "energyStorage": 500,
+      "energyIntakeRate": 50,
+      "energyCostShot": 50,
+      "energyCostStandby": 6,
+      "towerRange": 4,
+      "fireRate": 1,
+      "damage": 10,
+      "scrapCost": 50
+    },
+    {
+      "level": 2,
+      "energyStorage": 750,
+      "energyIntakeRate": 100,
+      "energyCostShot": 100,
+      "energyCostStandby": 7,
+      "towerRange": 4.5,
+      "fireRate": 1.1,
+      "damage": 15,
+      "scrapCost": 100
+    },
+    {
+      "level": 3,
+      "energyStorage": 1000,
+      "energyIntakeRate": 150,
+      "energyCostShot": 200,
+      "energyCostStandby": 8,
+      "towerRange": 5,
+      "fireRate": 1.2,
+      "damage": 20,
+      "scrapCost": 200
+    }
+  ]
+}

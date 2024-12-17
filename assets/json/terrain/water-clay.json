@@ -1,0 +1,7 @@
+{
+  "id": "terrain.water-clay",
+  "name": "Water",
+  "description": "Water with clay coasts and features.",
+  "assetType": "TERRAIN",
+  "tileSet": "visual/terrain/water-clay.png"
+}

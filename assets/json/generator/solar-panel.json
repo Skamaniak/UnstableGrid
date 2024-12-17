@@ -1,0 +1,31 @@
+{
+  "id": "generator.solar-panel",
+  "name": "Solar Panel",
+  "description": "Generates electric power from exposure to sun. Generation efficiency decreases significantly when the sun is obstructed or during the night.",
+  "assetType": "GENERATOR",
+  "menuIcon": "visual/generator/icon/solar-panel.png",
+  "texture": "visual/generator/solar-panel.png",
+  "levels": [
+    {
+      "level": 1,
+      "energyStorage": 100,
+      "energyGenerationRate": 100,
+      "connectRange": 2,
+      "scrapCost": 50
+    },
+    {
+      "level": 2,
+      "energyStorage": 300,
+      "energyGenerationRate": 150,
+      "connectRange": 2,
+      "scrapCost": 75
+    },
+    {
+      "level": 1,
+      "energyStorage": 600,
+      "energyGenerationRate": 200,
+      "connectRange": 2,
+      "scrapCost": 100
+    }
+  ]
+}

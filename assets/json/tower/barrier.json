@@ -1,0 +1,24 @@
+{
+  "id": "tower.barrier",
+  "name": "Barrier",
+  "description": "placeholder",
+  "assetType": "TOWER",
+  "menuIcon": "visual/tower/icon/placeholder.png",
+  "texture": "visual/tower/placeholder.png",
+  "shotSound": "sound/tower/placeholder.mp3",
+  "damageType": "none",
+  "targeting": "none",
+  "levels": [
+    {
+      "level": 1,
+      "energyStorage": 0,
+      "energyIntakeRate": 0,
+      "energyCostShot": 0,
+      "energyCostStandby": 0,
+      "towerRange": 0,
+      "fireRate": 0,
+      "damage": 0,
+      "scrapCost": 15
+    }
+  ]
+}

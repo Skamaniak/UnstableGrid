@@ -1,0 +1,24 @@
+{
+  "id": "tower.tesla",
+  "name": "Tesla Tower",
+  "description": "Sends strong electrical discharges towards enemies. To target those discharges, it first sends a beam of air ionising microwaves which creates a conductive channel to the target.",
+  "assetType": "TOWER",
+  "menuIcon": "visual/tower/icon/tesla.png",
+  "texture": "visual/tower/tesla.png",
+  "shotSound": "sound/tower/placeholder.mp3",
+  "damageType": "electricity",
+  "targeting": "single",
+  "levels": [
+    {
+      "level": 1,
+      "energyStorage": 2000,
+      "energyIntakeRate": 250,
+      "energyCostShot": 2000,
+      "energyCostStandby": 10,
+      "towerRange": 3,
+      "fireRate": 0.5,
+      "damage": 100,
+      "scrapCost": 200
+    }
+  ]
+}

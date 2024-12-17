@@ -1,0 +1,7 @@
+{
+  "id": "terrain.clay",
+  "name": "Clay",
+  "description": "Hardened and dry clay.",
+  "assetType": "TERRAIN",
+  "tileSet": "visual/terrain/clay.png"
+}

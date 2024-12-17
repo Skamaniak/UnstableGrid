@@ -1,0 +1,37 @@
+{
+  "id": "energy-storage.battery",
+  "name": "Battery",
+  "description": "Battery has big internal storage and can output significant power but it is slow to charge.",
+  "assetType": "ENERGY_STORAGE",
+  "menuIcon": "visual/energy-storage/icon/battery.png",
+  "texture": "visual/energy-storage/battery.png",
+  "levels": [
+    {
+      "level": 1,
+      "energyStorage": 10000,
+      "energyIntakeRate": 50,
+      "energyOutputRate": 500,
+      "energyCostStandby": 2,
+      "connectRange": 2,
+      "scrapCost": 75
+    },
+    {
+      "level": 2,
+      "energyStorage": 15000,
+      "energyIntakeRate": 75,
+      "energyOutputRate": 750,
+      "energyCostStandby": 3,
+      "connectRange": 3,
+      "scrapCost": 100
+    },
+    {
+      "level": 3,
+      "energyStorage": 20000,
+      "energyIntakeRate": 100,
+      "energyOutputRate": 1000,
+      "energyCostStandby": 4,
+      "connectRange": 4,
+      "scrapCost": 150
+    }
+  ]
+}

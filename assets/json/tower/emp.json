@@ -1,0 +1,24 @@
+{
+  "id": "tower.emp",
+  "name": "EMP Tower",
+  "description": "placeholder",
+  "assetType": "TOWER",
+  "menuIcon": "visual/tower/icon/placeholder.png",
+  "texture": "visual/tower/placeholder.png",
+  "shotSound": "sound/tower/placeholder.mp3",
+  "damageType": "emp",
+  "targeting": "aoe",
+  "levels": [
+    {
+      "level": 1,
+      "energyStorage": 1,
+      "energyIntakeRate": 1,
+      "energyCostShot": 1,
+      "energyCostStandby": 1,
+      "towerRange": 1,
+      "fireRate": 1,
+      "damage": 1,
+      "scrapCost": 1
+    }
+  ]
+}
