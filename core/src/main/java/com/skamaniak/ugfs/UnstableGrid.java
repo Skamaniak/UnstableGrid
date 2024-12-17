@@ -29,7 +29,7 @@ public class UnstableGrid extends Game {
         // use libGDX's default font
         font = new BitmapFont();
 
-        Gdx.input.setInputProcessor(input);
+
         this.setScreen(new MainMenuScreen(this));
     }
 

@@ -2,42 +2,62 @@ package com.skamaniak.ugfs;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 public class MainMenuScreen implements Screen {
     private final UnstableGrid game;
-    private final ScreenViewport viewport;
+    private final Stage stage;
 
     public MainMenuScreen(UnstableGrid unstableGrid) {
         this.game = unstableGrid;
-        this.viewport = new ScreenViewport();
+        stage = new Stage(new ScreenViewport());
     }
 
     @Override
     public void render(float delta) {
-        ScreenUtils.clear(Color.BLACK);
-
-        viewport.apply();
-        game.batch.setProjectionMatrix(viewport.getCamera().combined);
-        game.batch.begin();
-        game.font.draw(game.batch, "Welcome to Power Towers!!! ", 32, 32);
-        game.batch.end();
-
-        if (Gdx.input.isTouched()) {
-            game.setScreen(new GameScreen(game));
-            dispose();
-        }
+        stage.act(delta);
+        stage.draw();
     }
 
     @Override
     public void resize(int width, int height) {
-        viewport.update(width, height, true);
+        stage.getViewport().update(width, height, true);
     }
 
     @Override
     public void show() {
+        Gdx.input.setInputProcessor(stage);
+
+        Table menuContainer = new Table();
+        menuContainer.setFillParent(true);
+        stage.addActor(menuContainer);
+        Skin skin = new Skin(Gdx.files.internal("assets/skin/uiskin.json"));
+
+        TextButton playButton = new TextButton("Play", skin);
+        playButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new GameScreen(game));
+                dispose();
+            }
+        });
+        menuContainer.add(playButton).pad(10);
+        menuContainer.row();
+
+        TextButton exitButton = new TextButton("Exit", skin);
+        exitButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                Gdx.app.exit();
+            }
+        });
+        menuContainer.add(exitButton);
     }
 
     @Override
@@ -54,5 +74,6 @@ public class MainMenuScreen implements Screen {
 
     @Override
     public void dispose() {
+        stage.dispose();
     }
 }
