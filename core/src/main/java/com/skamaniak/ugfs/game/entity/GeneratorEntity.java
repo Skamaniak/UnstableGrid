@@ -1,5 +1,10 @@
 package com.skamaniak.ugfs.game.entity;
 
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Vector2;
+import com.skamaniak.ugfs.UnstableGrid;
+import com.skamaniak.ugfs.asset.GameAssetManager;
 import com.skamaniak.ugfs.asset.model.Generator;
 import com.skamaniak.ugfs.simulation.PowerConsumer;
 import com.skamaniak.ugfs.simulation.PowerProducer;
@@ -7,7 +12,7 @@ import com.skamaniak.ugfs.simulation.PowerProducer;
 import java.util.HashSet;
 import java.util.Set;
 
-public class GeneratorEntity implements PowerProducer {
+public class GeneratorEntity extends GameEntity implements PowerProducer {
 
     private Generator generator;
     private int level = 1;
@@ -15,7 +20,8 @@ public class GeneratorEntity implements PowerProducer {
 
     private final Set<PowerConsumer> to = new HashSet<>();
 
-    public GeneratorEntity(Generator generator) {
+    public GeneratorEntity(Vector2 position, Generator generator) {
+        super(position);
         this.generator = generator;
     }
 
@@ -55,5 +61,27 @@ public class GeneratorEntity implements PowerProducer {
 
     private Generator.Level generatorLevel() {
         return generator.getLevels().get(level - 1);
+    }
+
+    @Override
+    public void draw(SpriteBatch batch) {
+        Texture texture = GameAssetManager.INSTANCE.loadTexture(generator.getTexture());
+        batch.draw(texture,
+                position.x * GameAssetManager.TILE_SIZE_PX,
+                position.y * GameAssetManager.TILE_SIZE_PX,
+                GameAssetManager.TILE_SIZE_PX,
+                GameAssetManager.TILE_SIZE_PX);
+
+        drawEnergyLevel(batch, powerBank, generatorLevel().getPowerStorage());
+    }
+
+    @Override
+    public String toString() {
+        return "GeneratorEntity{" +
+                "generator=" + generator +
+                ", level=" + level +
+                ", powerBank=" + powerBank +
+                ", to=" + to +
+                '}';
     }
 }

@@ -1,9 +1,13 @@
 package com.skamaniak.ugfs.game.entity;
 
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Vector2;
+import com.skamaniak.ugfs.asset.GameAssetManager;
 import com.skamaniak.ugfs.asset.model.Tower;
 import com.skamaniak.ugfs.simulation.PowerConsumer;
 
-public class TowerEntity implements PowerConsumer {
+public class TowerEntity extends GameEntity implements PowerConsumer {
     public final Tower tower;
     private int level = 1;
 
@@ -12,7 +16,8 @@ public class TowerEntity implements PowerConsumer {
 
     private float cumulativeDelta = 0;
 
-    public TowerEntity(Tower tower) {
+    public TowerEntity(Vector2 position, Tower tower) {
+        super(position);
         this.tower = tower;
     }
 
@@ -60,5 +65,28 @@ public class TowerEntity implements PowerConsumer {
 
     private void shoot() {
         // TODO target enemy and cause damage
+    }
+
+    @Override
+    public void draw(SpriteBatch batch) {
+        Texture texture = GameAssetManager.INSTANCE.loadTexture(tower.getTexture());
+        batch.draw(texture,
+            position.x * GameAssetManager.TILE_SIZE_PX,
+            position.y * GameAssetManager.TILE_SIZE_PX,
+            GameAssetManager.TILE_SIZE_PX,
+            GameAssetManager.TILE_SIZE_PX);
+
+        drawEnergyLevel(batch, powerBank, towerLevel().getPowerStorage());
+    }
+
+    @Override
+    public String toString() {
+        return "TowerEntity{" +
+            "tower=" + tower +
+            ", level=" + level +
+            ", powerTakenIn=" + powerTakenIn +
+            ", powerBank=" + powerBank +
+            ", cumulativeDelta=" + cumulativeDelta +
+            '}';
     }
 }

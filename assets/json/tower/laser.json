@@ -5,7 +5,7 @@
   "assetType": "TOWER",
   "menuIcon": "visual/tower/icon/laser.png",
   "texture": "visual/tower/laser.png",
-  "shotSound": "sound/tower/laser.mp3",
+  "shotSound": "audio/sound/tower/laser.ogg",
   "damageType": "heat",
   "targeting": "single",
   "levels": [

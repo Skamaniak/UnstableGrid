@@ -5,7 +5,7 @@
   "assetType": "TOWER",
   "menuIcon": "visual/tower/icon/placeholder.png",
   "texture": "visual/tower/placeholder.png",
-  "shotSound": "sound/tower/emp.mp3",
+  "shotSound": "audio/sound/tower/emp.ogg",
   "damageType": "emp",
   "targeting": "aoe",
   "levels": [

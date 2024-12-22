@@ -1,5 +1,9 @@
 package com.skamaniak.ugfs.game.entity;
 
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Vector2;
+import com.skamaniak.ugfs.asset.GameAssetManager;
 import com.skamaniak.ugfs.asset.model.PowerStorage;
 import com.skamaniak.ugfs.simulation.PowerConsumer;
 import com.skamaniak.ugfs.simulation.PowerProducer;
@@ -7,7 +11,7 @@ import com.skamaniak.ugfs.simulation.PowerProducer;
 import java.util.HashSet;
 import java.util.Set;
 
-public class PowerStorageEntity implements PowerConsumer, PowerProducer {
+public class PowerStorageEntity extends GameEntity implements PowerConsumer, PowerProducer {
 
     private final PowerStorage storage;
     private int level = 1;
@@ -19,7 +23,8 @@ public class PowerStorageEntity implements PowerConsumer, PowerProducer {
 
     private final Set<PowerConsumer> to = new HashSet<>();
 
-    public PowerStorageEntity(PowerStorage storage) {
+    public PowerStorageEntity(Vector2 position, PowerStorage storage) {
+        super(position);
         this.storage = storage;
     }
 
@@ -84,6 +89,31 @@ public class PowerStorageEntity implements PowerConsumer, PowerProducer {
         if (!propagated) {
             consume(0, delta);
         }
+    }
+
+    @Override
+    public void draw(SpriteBatch batch) {
+        Texture texture = GameAssetManager.INSTANCE.loadTexture(storage.getTexture());
+        batch.draw(texture,
+            position.x * GameAssetManager.TILE_SIZE_PX,
+            position.y * GameAssetManager.TILE_SIZE_PX,
+            GameAssetManager.TILE_SIZE_PX,
+            GameAssetManager.TILE_SIZE_PX);
+
+        drawEnergyLevel(batch, powerBank, powerStorageLevel().getPowerStorage());
+    }
+
+    @Override
+    public String toString() {
+        return "PowerStorageEntity{" +
+            "storage=" + storage +
+            ", level=" + level +
+            ", powerTakenIn=" + powerTakenIn +
+            ", powerSentOut=" + powerSentOut +
+            ", powerBank=" + powerBank +
+            ", propagated=" + propagated +
+            ", to=" + to +
+            '}';
     }
 }
 

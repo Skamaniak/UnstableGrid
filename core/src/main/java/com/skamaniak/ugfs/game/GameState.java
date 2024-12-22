@@ -1,8 +1,10 @@
 package com.skamaniak.ugfs.game;
 
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.skamaniak.ugfs.UnstableGrid;
+import com.skamaniak.ugfs.asset.GameAssetManager;
+import com.skamaniak.ugfs.asset.model.Conduit;
 import com.skamaniak.ugfs.asset.model.Level;
-import com.skamaniak.ugfs.asset.model.PowerStorage;
 import com.skamaniak.ugfs.game.entity.ConduitEntity;
 import com.skamaniak.ugfs.game.entity.GeneratorEntity;
 import com.skamaniak.ugfs.game.entity.PowerStorageEntity;
@@ -15,7 +17,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class GameState {
-    private final UnstableGrid game;
+    public final UnstableGrid game;
     private final Level level;
     private final PowerGrid grid;
 
@@ -49,37 +51,31 @@ public class GameState {
         grid.addStorage(storage);
     }
 
-    public void registerLink(ConduitEntity conduit, PowerSource source, PowerConsumer destination) {
-        conduits.add(conduit);
-        grid.addLink(conduit, source, destination);
+    public void registerLink(Conduit conduit, PowerSource source, PowerConsumer destination) {
+        ConduitEntity conduitEntity = new ConduitEntity(conduit, source, destination);
+        conduits.add(conduitEntity);
+        grid.addConduit(conduitEntity);
     }
 
     public void sellConduit(ConduitEntity conduit) {
         conduits.remove(conduit);
-        grid.removeLink(conduit);
+        grid.removeConduit(conduit);
         // TODO add scrap back
     }
-
-    public void run(float delta) {
-        readInputs();
-        simulate(delta);
-        draw(delta);
-    }
-
-    private void readInputs() {
+    public void readInputs() {
         // TODO read inputs
     }
 
-    private void simulate(float delta) {
+    public void simulate(float delta) {
         grid.simulatePropagation(delta);
         simulateShooting(delta);
         simulateEnemies(delta);
     }
 
     private void simulateShooting(float delta) {
-        for (TowerEntity tower: towers) {
+        for (TowerEntity tower : towers) {
             if (tower.attemptShot(delta)) {
-                game.gameAssetManager.loadSound(tower.tower.getShotSound()).play();
+                GameAssetManager.INSTANCE.loadSound(tower.tower.getShotSound()).play();
             }
         }
     }
@@ -88,10 +84,38 @@ public class GameState {
 
     }
 
-    private void draw(float delta) {
+    public void draw(float delta) {
+        drawTerrain();
+        drawGameEntities();
+
         // TODO Draw UI
         // TODO Draw Game entities
-        // TODO Draw Enemies
         // TODO Draw projectiles, effects, etc.
+    }
+
+    private void drawTerrain() {
+        level.getMap().forEach(tile -> {
+            TextureRegion texture = GameAssetManager.INSTANCE.loadTerrainTileTexture(tile);
+            game.batch.draw(texture, tile.getX() * GameAssetManager.TILE_SIZE_PX,
+                tile.getY() * GameAssetManager.TILE_SIZE_PX);
+        });
+    }
+
+    private void drawGameEntities() {
+        for (GeneratorEntity generator: generators) {
+            generator.draw(game.batch);
+        }
+
+        for (PowerStorageEntity storage: storages) {
+            storage.draw(game.batch);
+        }
+
+        for (TowerEntity tower: towers) {
+            tower.draw(game.batch);
+        }
+
+        for (ConduitEntity conduit: conduits) {
+            conduit.draw(game.batch);
+        }
     }
 }

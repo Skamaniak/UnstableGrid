@@ -5,7 +5,7 @@
   "assetType": "TOWER",
   "menuIcon": "visual/tower/icon/tesla.png",
   "texture": "visual/tower/tesla.png",
-  "shotSound": "sound/tower/tesla.mp3",
+  "shotSound": "audio/sound/tower/tesla.ogg",
   "damageType": "electricity",
   "targeting": "single",
   "levels": [
@@ -16,7 +16,7 @@
       "powerCostShot": 2000,
       "powerCostStandby": 10,
       "towerRange": 3,
-      "fireRate": 0.5,
+      "fireRate": 0.6,
       "damage": 100,
       "scrapCost": 200
     }

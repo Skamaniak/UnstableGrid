@@ -5,7 +5,7 @@
   "assetType": "TOWER",
   "menuIcon": "visual/tower/icon/placeholder.png",
   "texture": "visual/tower/placeholder.png",
-  "shotSound": "sound/tower/placeholder.mp3",
+  "shotSound": "audio/sound/tower/placeholder.mp3",
   "damageType": "none",
   "targeting": "none",
   "levels": [

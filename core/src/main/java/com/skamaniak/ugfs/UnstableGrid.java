@@ -10,7 +10,6 @@ import com.skamaniak.ugfs.asset.model.Level;
 import com.skamaniak.ugfs.input.Input;
 
 public class UnstableGrid extends Game {
-    public GameAssetManager gameAssetManager;
     public Input input;
 
     public Level level;
@@ -20,10 +19,9 @@ public class UnstableGrid extends Game {
     public void create() {
         batch = new SpriteBatch();
 
-        gameAssetManager = new GameAssetManager();
         input = new Input();
 
-        level = gameAssetManager.getLevel("level.tutorial"); //Tutorial
+        level = GameAssetManager.INSTANCE.getLevel("level.tutorial"); //Tutorial
 
         // use libGDX's default font
         font = new BitmapFont();

@@ -1,55 +1,72 @@
 package com.skamaniak.ugfs.game.entity;
 
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Vector2;
+import com.skamaniak.ugfs.asset.GameAssetManager;
 import com.skamaniak.ugfs.asset.model.Conduit;
 import com.skamaniak.ugfs.simulation.PowerConsumer;
 import com.skamaniak.ugfs.simulation.PowerSource;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Objects;
 
-public class ConduitEntity implements PowerConsumer, PowerSource {
+public class ConduitEntity implements Drawable {
+    public Conduit conduit;
+    public PowerSource from;
+    public PowerConsumer to;
 
-    private final Conduit conduit;
-    private final Set<PowerConsumer> to = new HashSet<>();
-
-    private float propagatedPower = 0f;
-
-    public ConduitEntity(Conduit conduit) {
+    public ConduitEntity(Conduit conduit, PowerSource from, PowerConsumer to) {
         this.conduit = conduit;
+        this.from = from;
+        this.to = to;
     }
 
     @Override
-    public boolean addTo(PowerConsumer consumer) {
-        return to.add(consumer);
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ConduitEntity that = (ConduitEntity) o;
+        return Objects.equals(conduit, that.conduit) && Objects.equals(from, that.from) && Objects.equals(to, that.to);
     }
 
     @Override
-    public boolean removeTo(PowerConsumer consumer) {
-        return to.remove(consumer);
+    public int hashCode() {
+        return Objects.hash(conduit, from, to);
     }
 
     @Override
-    public float consume(float power, float delta) {
-        float transferablePower = Math.min(power, conduit.getPowerTransferRate() * delta - propagatedPower);
-        float powerToSend = transferablePower;
-        for (PowerConsumer input : to) {
-            if (powerToSend != 0) {
-                powerToSend = input.consume(powerToSend, delta);
-            }
+    public void draw(SpriteBatch batch) {
+        if (from instanceof GameEntity && to instanceof GameEntity) {
+            Vector2 fromPosition = ((GameEntity) from).position;
+            Vector2 toPosition = ((GameEntity) to).position;
+            drawLine(batch,
+                fromPosition.x * GameAssetManager.TILE_SIZE_PX + GameAssetManager.TILE_SIZE_PX / 2,
+                fromPosition.y * GameAssetManager.TILE_SIZE_PX + GameAssetManager.TILE_SIZE_PX / 2,
+                toPosition.x * GameAssetManager.TILE_SIZE_PX + GameAssetManager.TILE_SIZE_PX / 2,
+                toPosition.y * GameAssetManager.TILE_SIZE_PX + GameAssetManager.TILE_SIZE_PX / 2);
         }
-        float powerSent = transferablePower - powerToSend;
-        propagatedPower += powerSent;
-
-        return power - powerSent;
     }
 
-    @Override
-    public void resetPropagation() {
-        propagatedPower = 0f;
+    public void drawLine(SpriteBatch batch, float x1, float y1, float x2, float y2) {
 
-        for (PowerConsumer powerConsumer : to) {
-            powerConsumer.resetPropagation();
-        }
+        float dx = x2 - x1;
+        float dy = y2 - y1;
+        float length = (float) Math.sqrt(dx * dx + dy * dy); // Calculate the line's length
+        float angle = (float) Math.atan2(dy, dx) * (180 / (float) Math.PI); // Calculate the angle in degrees
+        float thickness = conduit.getLineThickness();
+
+        // Adjust the texture region's width in UV space to repeat the texture
+        TextureRegion textureRegion = GameAssetManager.INSTANCE.loadRepeatingTexture(conduit.getTexture()); //FIXME this is just ugly, nasty. no excuse
+        textureRegion.setRegion(0, 0, length / textureRegion.getRegionWidth(), 1);
+
+        // Draw the repeated texture
+        batch.draw(textureRegion,
+            x1, y1,                     // Starting position
+            0, thickness / 2,           // Origin for rotation (middle-left of the texture)
+            length, thickness,          // Width and Height of the line
+            1, 1,                       // Scale
+            angle                       // Rotation angle
+        );
     }
 }
 

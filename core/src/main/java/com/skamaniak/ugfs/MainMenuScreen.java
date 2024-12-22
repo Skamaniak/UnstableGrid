@@ -9,6 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.skamaniak.ugfs.asset.GameAssetManager;
 
 public class MainMenuScreen implements Screen {
     private final UnstableGrid game;
@@ -37,7 +38,7 @@ public class MainMenuScreen implements Screen {
         Table menuContainer = new Table();
         menuContainer.setFillParent(true);
         stage.addActor(menuContainer);
-        Skin skin = game.gameAssetManager.getSkin();
+        Skin skin = GameAssetManager.INSTANCE.getSkin();
 
         TextButton playButton = new TextButton("Play", skin);
         playButton.addListener(new ClickListener() {

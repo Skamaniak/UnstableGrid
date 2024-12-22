@@ -5,6 +5,8 @@ public class Conduit extends GameAsset {
     private int powerTransferLoss;
     private int connectRange;
     private int scrapCost;
+    private String texture;
+    private int lineThickness;
 
     public int getPowerTransferRate() {
         return powerTransferRate;
@@ -20,5 +22,13 @@ public class Conduit extends GameAsset {
 
     public int getScrapCost() {
         return scrapCost;
+    }
+
+    public String getTexture() {
+        return texture;
+    }
+
+    public int getLineThickness() {
+        return lineThickness;
     }
 }

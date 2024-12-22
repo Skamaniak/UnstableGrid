@@ -5,7 +5,7 @@
   "assetType": "TOWER",
   "menuIcon": "visual/tower/icon/placeholder.png",
   "texture": "visual/tower/placeholder.png",
-  "shotSound": "sound/tower/plasma.mp3",
+  "shotSound": "audio/sound/tower/plasma.ogg",
   "damageType": "heat",
   "targeting": "single",
   "levels": [
