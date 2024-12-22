@@ -19,8 +19,8 @@ public class JsonAssetLoader {
         return loadAssets(Generator.class, AssetType.GENERATOR.getAssetPath());
     }
 
-    public Map<String, EnergyStorage> loadEnergyStorages() {
-        return loadAssets(EnergyStorage.class, AssetType.ENERGY_STORAGE.getAssetPath());
+    public Map<String, PowerStorage> loadPowerStorages() {
+        return loadAssets(PowerStorage.class, AssetType.POWER_STORAGE.getAssetPath());
     }
 
     public Map<String, Conduit> loadConduits() {
@@ -31,8 +31,8 @@ public class JsonAssetLoader {
         return loadAssets(Terrain.class, AssetType.TERRAIN.getAssetPath());
     }
 
-    public Map<String, Scene> loadScenes() {
-        return loadAssets(Scene.class, AssetType.SCENE.getAssetPath());
+    public Map<String, Level> loadLevels() {
+        return loadAssets(Level.class, AssetType.LEVEL.getAssetPath());
     }
 
     private <T extends GameAsset> Map<String, T> loadAssets(Class<T> type, String directory) {

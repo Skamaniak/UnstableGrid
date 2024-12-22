@@ -8,23 +8,20 @@
   "levels": [
     {
       "level": 1,
-      "energyStorage": 100,
-      "energyGenerationRate": 100,
-      "connectRange": 2,
+      "powerStorage": 100,
+      "powerGenerationRate": 100,
       "scrapCost": 50
     },
     {
       "level": 2,
-      "energyStorage": 300,
-      "energyGenerationRate": 150,
-      "connectRange": 2,
+      "powerStorage": 300,
+      "powerGenerationRate": 150,
       "scrapCost": 75
     },
     {
       "level": 1,
-      "energyStorage": 600,
-      "energyGenerationRate": 200,
-      "connectRange": 2,
+      "powerStorage": 600,
+      "powerGenerationRate": 200,
       "scrapCost": 100
     }
   ]

@@ -1,17 +1,17 @@
 package com.skamaniak.ugfs.asset.model;
 
 public class Conduit extends GameAsset {
-    private int energyTransferRate;
-    private int energyTransferLoss;
+    private int powerTransferRate;
+    private int powerTransferLoss;
     private int connectRange;
     private int scrapCost;
 
-    public int getEnergyTransferRate() {
-        return energyTransferRate;
+    public int getPowerTransferRate() {
+        return powerTransferRate;
     }
 
-    public int getEnergyTransferLoss() {
-        return energyTransferLoss;
+    public int getPowerTransferLoss() {
+        return powerTransferLoss;
     }
 
     public int getConnectRange() {

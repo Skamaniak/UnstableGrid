@@ -11,10 +11,10 @@
   "levels": [
     {
       "level": 1,
-      "energyStorage": 0,
-      "energyIntakeRate": 0,
-      "energyCostShot": 0,
-      "energyCostStandby": 0,
+      "powerStorage": 0,
+      "powerIntakeRate": 0,
+      "powerCostShot": 0,
+      "powerCostStandby": 0,
       "towerRange": 0,
       "fireRate": 0,
       "damage": 0,

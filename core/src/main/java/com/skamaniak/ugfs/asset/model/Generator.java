@@ -21,25 +21,20 @@ public class Generator extends GameAsset {
 
     public static class Level {
         private int level;
-        private int energyStorage;
-        private int energyGenerationRate;
-        private int connectRange;
+        private int powerStorage;
+        private int powerGenerationRate;
         private int scrapCost;
 
         public int getLevel() {
             return level;
         }
 
-        public int getEnergyStorage() {
-            return energyStorage;
+        public int getPowerStorage() {
+            return powerStorage;
         }
 
-        public int getEnergyGenerationRate() {
-            return energyGenerationRate;
-        }
-
-        public int getConnectRange() {
-            return connectRange;
+        public int getPowerGenerationRate() {
+            return powerGenerationRate;
         }
 
         public int getScrapCost() {

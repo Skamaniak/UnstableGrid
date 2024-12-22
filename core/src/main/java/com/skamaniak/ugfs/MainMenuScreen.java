@@ -37,7 +37,7 @@ public class MainMenuScreen implements Screen {
         Table menuContainer = new Table();
         menuContainer.setFillParent(true);
         stage.addActor(menuContainer);
-        Skin skin = new Skin(Gdx.files.internal("assets/skin/uiskin.json"));
+        Skin skin = game.gameAssetManager.getSkin();
 
         TextButton playButton = new TextButton("Play", skin);
         playButton.addListener(new ClickListener() {

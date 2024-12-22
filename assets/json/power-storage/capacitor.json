@@ -1,0 +1,34 @@
+{
+  "id": "power-storage.capacitor",
+  "name": "Capacitor",
+  "description": "Basic capacitor with reasonable capacity and fast charge speed.",
+  "assetType": "POWER_STORAGE",
+  "menuIcon": "visual/power-storage/icon/capacitor.png",
+  "texture": "visual/power-storage/capacitor.png",
+  "levels": [
+    {
+      "level": 1,
+      "powerStorage": 1000,
+      "powerIntakeRate": 100,
+      "powerOutputRate": 1000,
+      "powerCostStandby": 4,
+      "scrapCost": 25
+    },
+    {
+      "level": 2,
+      "powerStorage": 1500,
+      "powerIntakeRate": 150,
+      "powerOutputRate": 1500,
+      "powerCostStandby": 6,
+      "scrapCost": 50
+    },
+    {
+      "level": 3,
+      "powerStorage": 2000,
+      "powerIntakeRate": 200,
+      "powerOutputRate": 2000,
+      "powerCostStandby": 8,
+      "scrapCost": 50
+    }
+  ]
+}

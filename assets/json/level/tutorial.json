@@ -1,10 +1,11 @@
 {
-  "id": "scene.tutorial",
+  "id": "level.tutorial",
   "name": "Tutorial Level",
   "description": "A tutorial level.",
-  "assetType": "SCENE",
-  "sceneWidth": 16,
-  "sceneHeight": 16,
+  "assetType": "LEVEL",
+  "scrap": 100,
+  "levelWidth": 16,
+  "levelHeight": 16,
   "map": [
     {"x": 0, "y": 15, "terrainId": "terrain.water-clay", "tileNumber": 6, "variant": 1},
     {"x": 1, "y": 15, "terrainId": "terrain.water-clay", "tileNumber": 0, "variant": 1},

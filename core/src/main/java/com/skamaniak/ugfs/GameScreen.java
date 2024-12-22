@@ -8,13 +8,15 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.skamaniak.ugfs.asset.GameAssetManager;
 import com.skamaniak.ugfs.input.KeyboardControls;
+import com.skamaniak.ugfs.simulation.PowerGrid;
 import com.skamaniak.ugfs.view.SceneCamera;
 
 public class GameScreen implements Screen {
-    private static final int WORLD_WIDTH = 1024;
-    private static final int WORLD_HEIGHT = 768;
+    public static final int WORLD_WIDTH = 1024;
+    public static final int WORLD_HEIGHT = 1024;
 
     private final UnstableGrid game;
+    private final PowerGrid powerGrid; // TODO replace with GameState
     private final SceneCamera sceneCamera;
     private final FitViewport viewport;
 
@@ -22,16 +24,22 @@ public class GameScreen implements Screen {
 
     public GameScreen(UnstableGrid unstableGrid) {
         this.game = unstableGrid;
-        this.sceneCamera = new SceneCamera(this.game.level.getSceneWidth() * GameAssetManager.TILE_SIZE_PX / 2,
-            this.game.level.getSceneHeight() * GameAssetManager.TILE_SIZE_PX / 2);
+        this.powerGrid = new PowerGrid();
+        this.sceneCamera = new SceneCamera(this.game.level.getLevelWidth() * GameAssetManager.TILE_SIZE_PX / 2,
+            this.game.level.getLevelHeight() * GameAssetManager.TILE_SIZE_PX / 2);
         this.viewport = new FitViewport(WORLD_WIDTH, WORLD_HEIGHT, sceneCamera);
     }
 
     @Override
     public void render(float delta) {
         readInputs();
+        simulateWorld(delta);
         updateCamera();
         draw();
+    }
+
+    private void simulateWorld(float delta) {
+        powerGrid.simulatePropagation(delta);
     }
 
     private void readInputs() {

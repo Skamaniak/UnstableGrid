@@ -2,17 +2,22 @@ package com.skamaniak.ugfs.asset.model;
 
 import java.util.List;
 
-public class Scene extends GameAsset {
+public class Level extends GameAsset {
     private List<Tile> map;
-    private int sceneWidth;
-    private int sceneHeight;
+    private int scrap;
+    private int levelWidth;
+    private int levelHeight;
 
-    public int getSceneWidth() {
-        return sceneWidth;
+    public int getScrap() {
+        return scrap;
     }
 
-    public int getSceneHeight() {
-        return sceneHeight;
+    public int getLevelWidth() {
+        return levelWidth;
+    }
+
+    public int getLevelHeight() {
+        return levelHeight;
     }
 
     public List<Tile> getMap() {

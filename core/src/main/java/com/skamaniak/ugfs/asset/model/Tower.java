@@ -36,10 +36,10 @@ public class Tower extends GameAsset {
 
     public static class Level {
         private int level;
-        private int energyStorage;
-        private int energyIntakeRate;
-        private int energyCostShot;
-        private int energyCostStandby;
+        private int powerStorage;
+        private int powerIntakeRate;
+        private int powerCostShot;
+        private int powerCostStandby;
         private float towerRange;
         private float fireRate;
         private int damage;
@@ -49,20 +49,20 @@ public class Tower extends GameAsset {
             return level;
         }
 
-        public int getEnergyStorage() {
-            return energyStorage;
+        public int getPowerStorage() {
+            return powerStorage;
         }
 
-        public int getEnergyIntakeRate() {
-            return energyIntakeRate;
+        public int getPowerIntakeRate() {
+            return powerIntakeRate;
         }
 
-        public int getEnergyCostShot() {
-            return energyCostShot;
+        public int getPowerCostShot() {
+            return powerCostShot;
         }
 
-        public int getEnergyCostStandby() {
-            return energyCostStandby;
+        public int getPowerCostStandby() {
+            return powerCostStandby;
         }
 
         public float getTowerRange() {

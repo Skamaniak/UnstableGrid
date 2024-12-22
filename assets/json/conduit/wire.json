@@ -3,8 +3,8 @@
   "name": "Copper Wire",
   "description": "Simple copper conductor able to transfer decent amount of power with low loss rate.",
   "assetType": "CONDUIT",
-  "energyTransferRate": 250,
-  "energyTransferLoss": 1,
+  "powerTransferRate": 250,
+  "powerTransferLoss": 1,
   "connectRange": 4,
   "scrapCost": 10
 }

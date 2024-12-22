@@ -2,7 +2,7 @@ package com.skamaniak.ugfs.asset.model;
 
 import java.util.List;
 
-public class EnergyStorage extends GameAsset {
+public class PowerStorage extends GameAsset {
     private String menuIcon;
     private String texture;
     private List<Level> levels;
@@ -21,35 +21,30 @@ public class EnergyStorage extends GameAsset {
 
     public static class Level {
         private int level;
-        private int energyStorage;
-        private int energyIntakeRate;
-        private int energyOutputRate;
-        private int energyCostStandby;
-        private int connectRange;
+        private int powerStorage;
+        private int powerIntakeRate;
+        private int powerOutputRate;
+        private int powerCostStandby;
         private int scrapCost;
 
         public int getLevel() {
             return level;
         }
 
-        public int getEnergyStorage() {
-            return energyStorage;
+        public int getPowerStorage() {
+            return powerStorage;
         }
 
-        public int getEnergyIntakeRate() {
-            return energyIntakeRate;
+        public int getPowerIntakeRate() {
+            return powerIntakeRate;
         }
 
-        public int getEnergyOutputRate() {
-            return energyOutputRate;
+        public int getPowerOutputRate() {
+            return powerOutputRate;
         }
 
-        public int getEnergyCostStandby() {
-            return energyCostStandby;
-        }
-
-        public int getConnectRange() {
-            return connectRange;
+        public int getPowerCostStandby() {
+            return powerCostStandby;
         }
 
         public int getScrapCost() {
