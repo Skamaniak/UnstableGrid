@@ -5,6 +5,7 @@
   "assetType": "POWER_STORAGE",
   "menuIcon": "visual/power-storage/icon/battery.png",
   "texture": "visual/power-storage/battery.png",
+  "buildableOn": ["LAND"],
   "levels": [
     {
       "level": 1,

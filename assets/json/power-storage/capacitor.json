@@ -5,6 +5,7 @@
   "assetType": "POWER_STORAGE",
   "menuIcon": "visual/power-storage/icon/capacitor.png",
   "texture": "visual/power-storage/capacitor.png",
+  "buildableOn": ["LAND"],
   "levels": [
     {
       "level": 1,

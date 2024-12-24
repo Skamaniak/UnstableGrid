@@ -8,6 +8,7 @@
   "shotSound": "audio/sound/tower/emp.ogg",
   "damageType": "emp",
   "targeting": "aoe",
+  "buildableOn": ["LAND"],
   "levels": [
     {
       "level": 1,

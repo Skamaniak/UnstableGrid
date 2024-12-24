@@ -5,23 +5,24 @@
   "assetType": "GENERATOR",
   "menuIcon": "visual/generator/icon/solar-panel.png",
   "texture": "visual/generator/solar-panel.png",
+  "buildableOn": ["LAND"],
   "levels": [
     {
       "level": 1,
       "powerStorage": 100,
-      "powerGenerationRate": 100,
+      "powerGenerationRate": 50,
       "scrapCost": 50
     },
     {
       "level": 2,
       "powerStorage": 300,
-      "powerGenerationRate": 150,
+      "powerGenerationRate": 100,
       "scrapCost": 75
     },
     {
       "level": 1,
       "powerStorage": 600,
-      "powerGenerationRate": 200,
+      "powerGenerationRate": 150,
       "scrapCost": 100
     }
   ]

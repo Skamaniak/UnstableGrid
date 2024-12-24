@@ -2,21 +2,18 @@ package com.skamaniak.ugfs;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.skamaniak.ugfs.asset.GameAssetManager;
-import com.skamaniak.ugfs.asset.model.Conduit;
-import com.skamaniak.ugfs.asset.model.Generator;
-import com.skamaniak.ugfs.asset.model.PowerStorage;
-import com.skamaniak.ugfs.asset.model.Tower;
+import com.skamaniak.ugfs.asset.model.*;
 import com.skamaniak.ugfs.game.GameState;
-import com.skamaniak.ugfs.game.entity.ConduitEntity;
 import com.skamaniak.ugfs.game.entity.GeneratorEntity;
 import com.skamaniak.ugfs.game.entity.PowerStorageEntity;
 import com.skamaniak.ugfs.game.entity.TowerEntity;
 import com.skamaniak.ugfs.input.KeyboardControls;
+import com.skamaniak.ugfs.ui.BuildMenu;
 import com.skamaniak.ugfs.view.SceneCamera;
 
 public class GameScreen implements Screen {
@@ -28,6 +25,10 @@ public class GameScreen implements Screen {
     private final FitViewport viewport;
 
     private final Vector2 clickPosition = new Vector2();
+    private final Vector2 mousePosition = new Vector2();
+
+    // UI
+    private final BuildMenu buildMenu = new BuildMenu();
 
     private GameState gameState;
 
@@ -39,6 +40,8 @@ public class GameScreen implements Screen {
         this.viewport = new FitViewport(WORLD_WIDTH, WORLD_HEIGHT, sceneCamera);
 
         populateGameStateWithDummyData();
+
+
     }
 
     private void populateGameStateWithDummyData() {
@@ -90,6 +93,7 @@ public class GameScreen implements Screen {
     }
 
     private void readInputs() {
+
         if (game.input.isPressed(KeyboardControls.CAMERA_ZOOM_IN)) {
             sceneCamera.zoomIn();
         }
@@ -115,6 +119,9 @@ public class GameScreen implements Screen {
         }
 
         gameState.readInputs();
+        buildMenu.handleInput();
+        mousePosition.set(Gdx.input.getX(), Gdx.input.getY());
+        viewport.unproject(mousePosition);
     }
 
     private void updateCamera() {
@@ -124,26 +131,49 @@ public class GameScreen implements Screen {
 
     private void draw(float delta) {
         viewport.apply();
-
         game.batch.setProjectionMatrix(viewport.getCamera().combined);
         game.batch.begin();
 
         gameState.draw(delta);
 
-        game.batch.draw(GameAssetManager.INSTANCE.loadTexture("assets/select-reticle.png"),
-            clickPosition.x - clickPosition.x % GameAssetManager.TILE_SIZE_PX,
-            clickPosition.y - clickPosition.y % GameAssetManager.TILE_SIZE_PX);
+        drawCursor();
         game.batch.end();
+
+        buildMenu.draw();
+    }
+
+    private void drawCursor() { //TODO temporal, also needs to take into account if there is anything already built on the tile
+        GameAsset selectedAsset = buildMenu.getSelectedAsset();
+        if (selectedAsset != null) {
+            String texture;
+            Level.Tile tile = gameState.getTerrainTile((int) mousePosition.x, (int) mousePosition.y);
+
+            if (tile != null) {
+                Terrain terrain = GameAssetManager.INSTANCE.getTerrain(tile.getTerrainId());
+                if (selectedAsset.getBuildableOn().contains(terrain.getTerrainType())) {
+                    texture = "assets/visual/valid-selection.png";
+                } else {
+                    texture = "assets/visual/invalid-selection.png";
+                }
+                game.batch.draw(GameAssetManager.INSTANCE.loadTexture(texture),
+                    mousePosition.x - mousePosition.x % GameAssetManager.TILE_SIZE_PX,
+                    mousePosition.y - mousePosition.y % GameAssetManager.TILE_SIZE_PX);
+            }
+        }
     }
 
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height);
+        buildMenu.resize(width, height);
     }
 
     @Override
     public void show() {
-        Gdx.input.setInputProcessor(game.input);
+        InputMultiplexer multiplexer = new InputMultiplexer();
+        multiplexer.addProcessor(game.input);
+        multiplexer.addProcessor(buildMenu.getStage());
+        Gdx.input.setInputProcessor(multiplexer);
     }
 
     @Override
@@ -163,6 +193,6 @@ public class GameScreen implements Screen {
 
     @Override
     public void dispose() {
-
+        buildMenu.dispose();
     }
 }

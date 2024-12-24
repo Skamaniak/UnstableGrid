@@ -50,7 +50,7 @@ public class GameAssetManager {
         this.terrains = jsonAssetLoader.loadTerrains();
 
         font = new BitmapFont(); //dispose?
-        font.setColor(Color.RED);
+        font.setColor(Color.BLACK);
     }
 
     public Tower getTower(String id) {

@@ -8,6 +8,7 @@
   "shotSound": "audio/sound/tower/plasma.ogg",
   "damageType": "heat",
   "targeting": "single",
+  "buildableOn": ["LAND"],
   "levels": [
     {
       "level": 1,

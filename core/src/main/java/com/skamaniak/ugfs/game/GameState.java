@@ -66,6 +66,17 @@ public class GameState {
         // TODO read inputs
     }
 
+    public Level.Tile getTerrainTile(int x, int y) {
+        x = x / GameAssetManager.TILE_SIZE_PX;
+        y = y / GameAssetManager.TILE_SIZE_PX;
+        for (Level.Tile tile : level.getMap()) {
+            if (tile.getX() == x && tile.getY() == y) {
+                return tile;
+            }
+        }
+        return null;
+    }
+
     public void simulate(float delta) {
         grid.simulatePropagation(delta);
         simulateShooting(delta);
@@ -102,6 +113,10 @@ public class GameState {
     }
 
     private void drawGameEntities() {
+        for (ConduitEntity conduit: conduits) {
+            conduit.draw(game.batch);
+        }
+
         for (GeneratorEntity generator: generators) {
             generator.draw(game.batch);
         }
@@ -113,9 +128,6 @@ public class GameState {
         for (TowerEntity tower: towers) {
             tower.draw(game.batch);
         }
-
-        for (ConduitEntity conduit: conduits) {
-            conduit.draw(game.batch);
-        }
     }
+
 }

@@ -63,7 +63,7 @@ public class PowerStorageEntity extends GameEntity implements PowerConsumer, Pow
 
         float newPowerBankState = Math.min(usablePower, storageLevel.getPowerStorage());
         float powerStored = newPowerBankState - powerBank;
-        powerBank = newPowerBankState;
+        powerBank = Math.max(newPowerBankState, 0); // rounding errors may send this to negative numbers
         powerTakenIn += powerStored + powerSent;
 
         return power - (powerStored + powerSent);

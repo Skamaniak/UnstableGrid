@@ -8,6 +8,7 @@
   "shotSound": "audio/sound/tower/placeholder.mp3",
   "damageType": "none",
   "targeting": "none",
+  "buildableOn": ["LAND"],
   "levels": [
     {
       "level": 1,

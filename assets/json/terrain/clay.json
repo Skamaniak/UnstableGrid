@@ -3,5 +3,6 @@
   "name": "Clay",
   "description": "Hardened and dry clay.",
   "assetType": "TERRAIN",
-  "tileSet": "visual/terrain/clay.png"
+  "tileSet": "visual/terrain/clay.png",
+  "terrainType": "LAND"
 }

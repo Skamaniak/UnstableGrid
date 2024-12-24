@@ -51,6 +51,7 @@ public class GeneratorEntity extends GameEntity implements PowerProducer {
                 powerBank = powerConsumer.consume(powerBank, delta);
             }
         }
+        powerBank = Math.max(powerBank, 0); // rounding errors may send this to negative numbers
     }
 
     private void updatePowerStorage(float delta) {

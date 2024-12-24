@@ -1,5 +1,6 @@
 package com.skamaniak.ugfs.game.entity;
 
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
@@ -47,8 +48,7 @@ public class ConduitEntity implements Drawable {
         }
     }
 
-    public void drawLine(SpriteBatch batch, float x1, float y1, float x2, float y2) {
-
+    public void drawLine(SpriteBatch batch, float x1, float y1, float x2, float y2) { //FIXME this is just ugly, nasty. no excuse
         float dx = x2 - x1;
         float dy = y2 - y1;
         float length = (float) Math.sqrt(dx * dx + dy * dy); // Calculate the line's length
@@ -56,10 +56,10 @@ public class ConduitEntity implements Drawable {
         float thickness = conduit.getLineThickness();
 
         // Adjust the texture region's width in UV space to repeat the texture
-        TextureRegion textureRegion = GameAssetManager.INSTANCE.loadRepeatingTexture(conduit.getTexture()); //FIXME this is just ugly, nasty. no excuse
-        textureRegion.setRegion(0, 0, length / textureRegion.getRegionWidth(), 1);
+        TextureRegion textureRegion = GameAssetManager.INSTANCE.loadRepeatingTexture(conduit.getTexture());
+        Texture texture = textureRegion.getTexture();
+        textureRegion.setRegion(0, 0, (int) (length / texture.getWidth()), texture.getHeight());
 
-        // Draw the repeated texture
         batch.draw(textureRegion,
             x1, y1,                     // Starting position
             0, thickness / 2,           // Origin for rotation (middle-left of the texture)

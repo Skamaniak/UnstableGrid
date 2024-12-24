@@ -8,6 +8,7 @@
   "shotSound": "audio/sound/tower/microwave.ogg",
   "damageType": "electricity",
   "targeting": "single",
+  "buildableOn": ["LAND"],
   "levels": [
     {
       "level": 1,

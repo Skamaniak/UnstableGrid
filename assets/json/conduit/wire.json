@@ -4,7 +4,7 @@
   "description": "Simple copper conductor able to transfer decent amount of power with low loss rate.",
   "assetType": "CONDUIT",
   "texture": "visual/conduit/copper-wire.png",
-  "lineThickness": 5,
+  "lineThickness": 8,
   "powerTransferRate": 250,
   "powerTransferLoss": 1,
   "connectRange": 4,
