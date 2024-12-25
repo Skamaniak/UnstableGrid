@@ -5,7 +5,7 @@
   "assetType": "CONDUIT",
   "texture": "visual/conduit/copper-wire.png",
   "lineThickness": 8,
-  "powerTransferRate": 250,
+  "powerTransferRate": 200,
   "powerTransferLoss": 1,
   "connectRange": 4,
   "scrapCost": 10

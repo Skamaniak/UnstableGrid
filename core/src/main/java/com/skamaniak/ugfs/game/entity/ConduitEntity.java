@@ -11,15 +11,25 @@ import com.skamaniak.ugfs.simulation.PowerSource;
 
 import java.util.Objects;
 
-public class ConduitEntity implements Drawable {
+public class ConduitEntity implements PowerConsumer, Drawable {
     public Conduit conduit;
     public PowerSource from;
     public PowerConsumer to;
+
+    private float powerTransferred = 0;
 
     public ConduitEntity(Conduit conduit, PowerSource from, PowerConsumer to) {
         this.conduit = conduit;
         this.from = from;
         this.to = to;
+    }
+
+    public void register() {
+        this.from.addTo(this);
+    }
+
+    public void unregister() {
+        this.from.removeTo(this);
     }
 
     @Override
@@ -33,6 +43,21 @@ public class ConduitEntity implements Drawable {
     @Override
     public int hashCode() {
         return Objects.hash(conduit, from, to);
+    }
+
+    @Override
+    public void resetPropagation() {
+        powerTransferred = 0f;
+        to.resetPropagation();
+    }
+
+    @Override
+    public float consume(float power, float delta) {
+        power = Math.max(power - conduit.getPowerTransferLoss() * delta, 0);
+
+        float transferablePower = Math.min(power, conduit.getPowerTransferRate() * delta - powerTransferred);
+        float powerLeft = to.consume(transferablePower, delta);
+        return power - (transferablePower - powerLeft);
     }
 
     @Override

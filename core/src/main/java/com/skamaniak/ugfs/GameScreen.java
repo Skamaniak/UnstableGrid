@@ -48,18 +48,22 @@ public class GameScreen implements Screen {
     }
 
     private void populateGameStateWithDummyData() {
-        Generator generator = GameAssetManager.INSTANCE.getGenerator("generator.solar-panel");
-        GeneratorEntity generatorSolarPanel1 = new GeneratorEntity(new Vector2(4, 10), generator);
+        Generator solarGenerator = GameAssetManager.INSTANCE.getGenerator("generator.solar-panel");
+        GeneratorEntity generatorSolarPanel1 = new GeneratorEntity(new Vector2(4, 10), solarGenerator);
         gameState.registerGenerator(generatorSolarPanel1);
 
-        GeneratorEntity generatorSolarPanel2 = new GeneratorEntity(new Vector2(4, 8), generator);
+        GeneratorEntity generatorSolarPanel2 = new GeneratorEntity(new Vector2(4, 8), solarGenerator);
         gameState.registerGenerator(generatorSolarPanel2);
 
-        GeneratorEntity generatorSolarPanel3 = new GeneratorEntity(new Vector2(4, 6), generator);
+        GeneratorEntity generatorSolarPanel3 = new GeneratorEntity(new Vector2(4, 6), solarGenerator);
         gameState.registerGenerator(generatorSolarPanel3);
 
-        GeneratorEntity generatorSolarPanel4 = new GeneratorEntity(new Vector2(4, 4), generator);
+        GeneratorEntity generatorSolarPanel4 = new GeneratorEntity(new Vector2(4, 4), solarGenerator);
         gameState.registerGenerator(generatorSolarPanel4);
+
+        Generator waterGenerator = GameAssetManager.INSTANCE.getGenerator("generator.water");
+        GeneratorEntity waterGenerator1 = new GeneratorEntity(new Vector2(4, 2), waterGenerator);
+        gameState.registerGenerator(waterGenerator1);
 
         PowerStorage storageCapacitor = GameAssetManager.INSTANCE.getPowerStorage("power-storage.capacitor");
         PowerStorageEntity storageEntity = new PowerStorageEntity(new Vector2(7, 6), storageCapacitor);
@@ -70,7 +74,7 @@ public class GameScreen implements Screen {
         gameState.registerPowerStorage(storageEntity2);
 
         Tower towerTesla = GameAssetManager.INSTANCE.getTower("tower.tesla");
-        TowerEntity towerEntity = new TowerEntity(new Vector2(10, 5), towerTesla);
+        TowerEntity towerEntity = new TowerEntity(new Vector2(10, 6), towerTesla);
         gameState.registerTower(towerEntity);
 
         Tower towerLaser = GameAssetManager.INSTANCE.getTower("tower.laser");
@@ -83,7 +87,8 @@ public class GameScreen implements Screen {
         gameState.registerLink(conduit, generatorSolarPanel3, storageEntity);
         gameState.registerLink(conduit, generatorSolarPanel4, storageEntity);
         gameState.registerLink(conduit, generatorSolarPanel4, storageEntity2);
-        gameState.registerLink(conduit, storageEntity, towerEntity);
+        gameState.registerLink(conduit, waterGenerator1, storageEntity2);
+        gameState.registerLink(conduit, storageEntity2, towerEntity);
         gameState.registerLink(conduit, storageEntity, towerEntity2);
     }
 
@@ -114,6 +119,9 @@ public class GameScreen implements Screen {
         }
         if (game.input.isPressed(KeyboardControls.CAMERA_MOVE_LEFT)) {
             sceneCamera.moveLeft();
+        }
+        if (game.input.isPressed(KeyboardControls.DEBUG_SHOW_FPS)) {
+            System.out.println(Gdx.graphics.getFramesPerSecond());
         }
 
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {

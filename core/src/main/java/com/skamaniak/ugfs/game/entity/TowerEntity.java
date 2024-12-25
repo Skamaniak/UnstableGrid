@@ -11,9 +11,7 @@ public class TowerEntity extends GameEntity implements PowerConsumer {
     public final Tower tower;
     private int level = 1;
 
-    private float powerTakenIn = 0f;
     private float powerBank = 0f;
-
     private float cumulativeDelta = 0;
 
     public TowerEntity(Vector2 position, Tower tower) {
@@ -24,12 +22,12 @@ public class TowerEntity extends GameEntity implements PowerConsumer {
     @Override
     public float consume(float power, float delta) {
         Tower.Level towerLevel = towerLevel();
-        float usablePower = powerBank + Math.min(power, towerLevel.getPowerIntakeRate() * delta - powerTakenIn);
 
-        float newPowerBankState = Math.min(usablePower, towerLevel.getPowerStorage());
+        powerBank = Math.max(powerBank - towerLevel.getPowerLossStandby() * delta, 0); // Simulate power loss
+
+        float newPowerBankState = Math.min(powerBank + power, towerLevel.getPowerStorage());
         float powerStored = newPowerBankState - powerBank;
         powerBank = newPowerBankState;
-        powerTakenIn += powerStored;
 
         return power - powerStored;
     }
@@ -40,7 +38,7 @@ public class TowerEntity extends GameEntity implements PowerConsumer {
 
     @Override
     public void resetPropagation() {
-        powerTakenIn = 0f;
+        // Nothing
     }
 
     public boolean attemptShot(float delta) { //TODO what if delta is some huge number?
@@ -84,7 +82,6 @@ public class TowerEntity extends GameEntity implements PowerConsumer {
         return "TowerEntity{" +
             "tower=" + tower +
             ", level=" + level +
-            ", powerTakenIn=" + powerTakenIn +
             ", powerBank=" + powerBank +
             ", cumulativeDelta=" + cumulativeDelta +
             '}';
@@ -92,11 +89,15 @@ public class TowerEntity extends GameEntity implements PowerConsumer {
 
     @Override
     public String getDetails() {
-        int maxPower = towerLevel().getPowerStorage();
+        Tower.Level level = towerLevel();
+        int maxPower = level.getPowerStorage();
         return tower.getName()
-            + "\nLevel: " + level
+            + "\nLevel: " + this.level
             + "\nPosition: [" + (int) position.x + "," + (int) position.y + "]"
             + "\nMax capacity: " + maxPower
-            + "\nStored: " + Math.round(powerBank * 100 / maxPower) + "% \t (" + Math.round(powerBank) + "/" + maxPower + ")";
+            + "\nStored: " + Math.round(powerBank * 100 / maxPower) + "% \t (" + Math.round(powerBank) + "/" + maxPower + ")"
+            + "\nDamage: " + level.getDamage()
+            + "\nFire rate: " + level.getFireRate()
+            + "\nDPS: " + level.getDamage() * level.getFireRate();
     }
 }

@@ -1,0 +1,29 @@
+{
+  "id": "generator.water",
+  "name": "Water Generator",
+  "description": "Generates electric power from the water current.",
+  "assetType": "GENERATOR",
+  "menuIcon": "visual/generator/icon/water.png",
+  "texture": "visual/generator/water.png",
+  "buildableOn": ["WATER"],
+  "levels": [
+    {
+      "level": 1,
+      "powerStorage": 200,
+      "powerGenerationRate": 100,
+      "scrapCost": 75
+    },
+    {
+      "level": 2,
+      "powerStorage": 400,
+      "powerGenerationRate": 150,
+      "scrapCost": 125
+    },
+    {
+      "level": 3,
+      "powerStorage": 600,
+      "powerGenerationRate": 200,
+      "scrapCost": 175
+    }
+  ]
+}

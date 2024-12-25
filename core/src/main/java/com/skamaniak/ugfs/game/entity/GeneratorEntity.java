@@ -3,7 +3,6 @@ package com.skamaniak.ugfs.game.entity;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
-import com.skamaniak.ugfs.UnstableGrid;
 import com.skamaniak.ugfs.asset.GameAssetManager;
 import com.skamaniak.ugfs.asset.model.Generator;
 import com.skamaniak.ugfs.simulation.PowerConsumer;
@@ -47,9 +46,7 @@ public class GeneratorEntity extends GameEntity implements PowerProducer {
         updatePowerStorage(delta);
 
         for (PowerConsumer powerConsumer : to) {
-            if (powerBank > 0) {
-                powerBank = powerConsumer.consume(powerBank, delta);
-            }
+            powerBank = powerConsumer.consume(powerBank, delta);
         }
         powerBank = Math.max(powerBank, 0); // rounding errors may send this to negative numbers
     }
@@ -68,10 +65,10 @@ public class GeneratorEntity extends GameEntity implements PowerProducer {
     public void draw(SpriteBatch batch) {
         Texture texture = GameAssetManager.INSTANCE.loadTexture(generator.getTexture());
         batch.draw(texture,
-                position.x * GameAssetManager.TILE_SIZE_PX,
-                position.y * GameAssetManager.TILE_SIZE_PX,
-                GameAssetManager.TILE_SIZE_PX,
-                GameAssetManager.TILE_SIZE_PX);
+            position.x * GameAssetManager.TILE_SIZE_PX,
+            position.y * GameAssetManager.TILE_SIZE_PX,
+            GameAssetManager.TILE_SIZE_PX,
+            GameAssetManager.TILE_SIZE_PX);
 
         drawEnergyLevel(batch, powerBank, generatorLevel().getPowerStorage());
     }
@@ -79,11 +76,11 @@ public class GeneratorEntity extends GameEntity implements PowerProducer {
     @Override
     public String toString() {
         return "GeneratorEntity{" +
-                "generator=" + generator +
-                ", level=" + level +
-                ", powerBank=" + powerBank +
-                ", to=" + to +
-                '}';
+            "generator=" + generator +
+            ", level=" + level +
+            ", powerBank=" + powerBank +
+            ", to=" + to +
+            '}';
     }
 
     @Override

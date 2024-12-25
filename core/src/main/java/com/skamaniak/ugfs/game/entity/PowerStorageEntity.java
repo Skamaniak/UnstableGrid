@@ -16,8 +16,6 @@ public class PowerStorageEntity extends GameEntity implements PowerConsumer, Pow
     private final PowerStorage storage;
     private int level = 1;
 
-    private float powerTakenIn = 0f;
-    private float powerSentOut = 0f;
     private float powerBank = 0f;
     private boolean propagated = false;
 
@@ -46,25 +44,18 @@ public class PowerStorageEntity extends GameEntity implements PowerConsumer, Pow
     public float consume(float power, float delta) {
         propagated = true;
         PowerStorage.Level storageLevel = powerStorageLevel();
-        float usablePower = powerBank + Math.min(power, storageLevel.getPowerIntakeRate() * delta - powerTakenIn);
-        float transferablePower = Math.min(usablePower, storageLevel.getPowerOutputRate() * delta - powerSentOut);
 
-        float powerToSend = transferablePower;
+        powerBank = Math.max(powerBank - storageLevel.getPowerLossStandby() * delta, 0); // Simulate power loss
+
+        float usablePower = power;
         for (PowerConsumer input : to) {
-            if (powerToSend != 0) {
-                powerToSend = input.consume(powerToSend, delta);
-            }
+            usablePower = input.consume(usablePower, delta);
         }
 
-        float powerSent = transferablePower - powerToSend;
-        powerSentOut += powerSent;
-
-        usablePower -= powerSent;
-
-        float newPowerBankState = Math.min(usablePower, storageLevel.getPowerStorage());
+        float powerSent = power - usablePower;
+        float newPowerBankState = Math.min(powerBank + usablePower, storageLevel.getPowerStorage());
         float powerStored = newPowerBankState - powerBank;
         powerBank = Math.max(newPowerBankState, 0); // rounding errors may send this to negative numbers
-        powerTakenIn += powerStored + powerSent;
 
         return power - (powerStored + powerSent);
     }
@@ -75,8 +66,6 @@ public class PowerStorageEntity extends GameEntity implements PowerConsumer, Pow
 
     @Override
     public void resetPropagation() {
-        powerSentOut = 0f;
-        powerTakenIn = 0f;
         propagated = false;
 
         for (PowerConsumer powerConsumer : to) {
@@ -108,8 +97,6 @@ public class PowerStorageEntity extends GameEntity implements PowerConsumer, Pow
         return "PowerStorageEntity{" +
             "storage=" + storage +
             ", level=" + level +
-            ", powerTakenIn=" + powerTakenIn +
-            ", powerSentOut=" + powerSentOut +
             ", powerBank=" + powerBank +
             ", propagated=" + propagated +
             ", to=" + to +

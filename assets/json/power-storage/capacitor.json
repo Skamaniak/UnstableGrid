@@ -10,25 +10,19 @@
     {
       "level": 1,
       "powerStorage": 1000,
-      "powerIntakeRate": 100,
-      "powerOutputRate": 1000,
-      "powerCostStandby": 4,
+      "powerLossStandby": 4,
       "scrapCost": 25
     },
     {
       "level": 2,
       "powerStorage": 1500,
-      "powerIntakeRate": 150,
-      "powerOutputRate": 1500,
-      "powerCostStandby": 6,
+      "powerLossStandby": 6,
       "scrapCost": 50
     },
     {
       "level": 3,
       "powerStorage": 2000,
-      "powerIntakeRate": 200,
-      "powerOutputRate": 2000,
-      "powerCostStandby": 8,
+      "powerLossStandby": 8,
       "scrapCost": 50
     }
   ]

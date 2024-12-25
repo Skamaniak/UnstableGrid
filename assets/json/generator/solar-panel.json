@@ -20,7 +20,7 @@
       "scrapCost": 75
     },
     {
-      "level": 1,
+      "level": 3,
       "powerStorage": 600,
       "powerGenerationRate": 150,
       "scrapCost": 100

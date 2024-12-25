@@ -22,9 +22,7 @@ public class PowerStorage extends GameAsset {
     public static class Level {
         private int level;
         private int powerStorage;
-        private int powerIntakeRate;
-        private int powerOutputRate;
-        private int powerCostStandby;
+        private int powerLossStandby;
         private int scrapCost;
 
         public int getLevel() {
@@ -35,16 +33,8 @@ public class PowerStorage extends GameAsset {
             return powerStorage;
         }
 
-        public int getPowerIntakeRate() {
-            return powerIntakeRate;
-        }
-
-        public int getPowerOutputRate() {
-            return powerOutputRate;
-        }
-
-        public int getPowerCostStandby() {
-            return powerCostStandby;
+        public int getPowerLossStandby() {
+            return powerLossStandby;
         }
 
         public int getScrapCost() {

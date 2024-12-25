@@ -1,7 +1,6 @@
 package com.skamaniak.ugfs.simulation;
 
 import com.badlogic.gdx.Gdx;
-import com.skamaniak.ugfs.asset.model.Conduit;
 import com.skamaniak.ugfs.game.entity.ConduitEntity;
 import com.skamaniak.ugfs.game.entity.GeneratorEntity;
 import com.skamaniak.ugfs.game.entity.PowerStorageEntity;
@@ -11,7 +10,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class PowerGrid {
-    //TODO simulate losses on the grid
     //TODO do not try to fill power path one by one, try to split the power among more paths during simulation
 
     private final Set<GeneratorEntity> sources = new HashSet<>();
@@ -78,19 +76,13 @@ public class PowerGrid {
     }
 
     public boolean addConduit(ConduitEntity conduitToAdd) {
-        if (conduits.add(conduitToAdd)) {
-            conduitToAdd.from.addTo(conduitToAdd.to);
-            return true;
-        }
-        return false;
+        conduitToAdd.register();
+        return conduits.add(conduitToAdd);
     }
 
     public boolean removeConduit(ConduitEntity conduit) {
-        if (conduits.remove(conduit)) {
-            conduit.from.removeTo(conduit.to);
-            return true;
-        }
-        return false;
+        conduit.unregister();
+        return conduits.remove(conduit);
     }
 
     public Set<ConduitEntity> getConduits() {

@@ -13,35 +13,12 @@
     {
       "level": 1,
       "powerStorage": 500,
-      "powerIntakeRate": 50,
       "powerCostShot": 20,
-      "powerCostStandby": 6,
+      "powerLossStandby": 1,
       "towerRange": 4,
       "fireRate": 1,
       "damage": 10,
       "scrapCost": 50
-    },
-    {
-      "level": 2,
-      "powerStorage": 750,
-      "powerIntakeRate": 100,
-      "powerCostShot": 40,
-      "powerCostStandby": 7,
-      "towerRange": 4.5,
-      "fireRate": 1.1,
-      "damage": 15,
-      "scrapCost": 100
-    },
-    {
-      "level": 3,
-      "powerStorage": 1000,
-      "powerIntakeRate": 150,
-      "powerCostShot": 60,
-      "powerCostStandby": 8,
-      "towerRange": 5,
-      "fireRate": 1.2,
-      "damage": 20,
-      "scrapCost": 200
     }
   ]
 }

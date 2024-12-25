@@ -37,9 +37,8 @@ public class Tower extends GameAsset {
     public static class Level {
         private int level;
         private int powerStorage;
-        private int powerIntakeRate;
         private int powerCostShot;
-        private int powerCostStandby;
+        private int powerLossStandby;
         private float towerRange;
         private float fireRate;
         private int damage;
@@ -53,16 +52,12 @@ public class Tower extends GameAsset {
             return powerStorage;
         }
 
-        public int getPowerIntakeRate() {
-            return powerIntakeRate;
-        }
-
         public int getPowerCostShot() {
             return powerCostShot;
         }
 
-        public int getPowerCostStandby() {
-            return powerCostStandby;
+        public int getPowerLossStandby() {
+            return powerLossStandby;
         }
 
         public float getTowerRange() {

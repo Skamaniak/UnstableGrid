@@ -13,9 +13,8 @@
     {
       "level": 1,
       "powerStorage": 1,
-      "powerIntakeRate": 1,
       "powerCostShot": 1,
-      "powerCostStandby": 1,
+      "powerLossStandby": 1,
       "towerRange": 1,
       "fireRate": 1,
       "damage": 1,
