@@ -1,18 +1,17 @@
 package com.skamaniak.ugfs.game;
 
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Vector2;
 import com.skamaniak.ugfs.UnstableGrid;
 import com.skamaniak.ugfs.asset.GameAssetManager;
 import com.skamaniak.ugfs.asset.model.Conduit;
 import com.skamaniak.ugfs.asset.model.Level;
-import com.skamaniak.ugfs.game.entity.ConduitEntity;
-import com.skamaniak.ugfs.game.entity.GeneratorEntity;
-import com.skamaniak.ugfs.game.entity.PowerStorageEntity;
-import com.skamaniak.ugfs.game.entity.TowerEntity;
+import com.skamaniak.ugfs.game.entity.*;
 import com.skamaniak.ugfs.simulation.PowerConsumer;
 import com.skamaniak.ugfs.simulation.PowerGrid;
 import com.skamaniak.ugfs.simulation.PowerSource;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -72,6 +71,31 @@ public class GameState {
         for (Level.Tile tile : level.getMap()) {
             if (tile.getX() == x && tile.getY() == y) {
                 return tile;
+            }
+        }
+        return null;
+    }
+
+    public GameEntity getEntityAt(int x, int y) {
+        x = x / GameAssetManager.TILE_SIZE_PX;
+        y = y / GameAssetManager.TILE_SIZE_PX;
+
+        GameEntity gameEntity = getEntityAt(generators, x, y);
+        if (gameEntity == null) {
+            gameEntity = getEntityAt(storages, x, y);
+        }
+        if (gameEntity == null) {
+            gameEntity = getEntityAt(towers, x, y);
+        }
+        return gameEntity;
+    }
+
+    private <T extends GameEntity> T getEntityAt(Collection<T> entities, int x, int y) {
+        Vector2 entityPosition;
+        for (T entity : entities) {
+            entityPosition = entity.getPosition();
+            if (entityPosition.x == x && entityPosition.y == y) {
+                return entity;
             }
         }
         return null;

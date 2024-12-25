@@ -115,5 +115,15 @@ public class PowerStorageEntity extends GameEntity implements PowerConsumer, Pow
             ", to=" + to +
             '}';
     }
+
+    @Override
+    public String getDetails() {
+        int maxPower = powerStorageLevel().getPowerStorage();
+        return storage.getName()
+            + "\nLevel: " + level
+            + "\nPosition: [" + (int) position.x + "," + (int) position.y + "]"
+            + "\nMax capacity: " + maxPower
+            + "\nStored: " + Math.round(powerBank * 100 / maxPower) + "% \t (" + Math.round(powerBank) + "/" + maxPower + ")";
+    }
 }
 

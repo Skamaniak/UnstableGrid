@@ -19,8 +19,10 @@ public abstract class GameEntity implements Drawable {
     protected void drawEnergyLevel(SpriteBatch batch, float current, float max) { //FIXME remove, this is only for debugging
         GameAssetManager.INSTANCE.getFont()
             .draw(batch,
-                ((int) Math.floor(current * 100 / max)) + "%",
+                (Math.round(current * 100 / max)) + "%",
                 position.x * GameAssetManager.TILE_SIZE_PX + 4,
                 position.y * GameAssetManager.TILE_SIZE_PX + 16);
     }
+
+    public abstract String getDetails();
 }

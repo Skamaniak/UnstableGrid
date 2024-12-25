@@ -89,4 +89,14 @@ public class TowerEntity extends GameEntity implements PowerConsumer {
             ", cumulativeDelta=" + cumulativeDelta +
             '}';
     }
+
+    @Override
+    public String getDetails() {
+        int maxPower = towerLevel().getPowerStorage();
+        return tower.getName()
+            + "\nLevel: " + level
+            + "\nPosition: [" + (int) position.x + "," + (int) position.y + "]"
+            + "\nMax capacity: " + maxPower
+            + "\nStored: " + Math.round(powerBank * 100 / maxPower) + "% \t (" + Math.round(powerBank) + "/" + maxPower + ")";
+    }
 }

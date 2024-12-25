@@ -85,4 +85,15 @@ public class GeneratorEntity extends GameEntity implements PowerProducer {
                 ", to=" + to +
                 '}';
     }
+
+    @Override
+    public String getDetails() {
+        int maxPower = generatorLevel().getPowerStorage();
+        return generator.getName()
+            + "\nLevel: " + level
+            + "\nPosition: [" + (int) position.x + "," + (int) position.y + "]"
+            + "\nMax capacity: " + maxPower
+            + "\nGeneration: " + generatorLevel().getPowerGenerationRate()
+            + "\nStored: " + Math.round(powerBank * 100 / maxPower) + "% \t (" + Math.round(powerBank) + "/" + maxPower + ")";
+    }
 }
