@@ -47,6 +47,25 @@ public class GameScreen implements Screen {
 
     }
 
+//    private void populateGameStateWithDummyData() {
+//        Generator solarGenerator = GameAssetManager.INSTANCE.getGenerator("generator.solar-panel");
+//        GeneratorEntity generatorSolarPanel = new GeneratorEntity(new Vector2(4, 10), solarGenerator);
+//        gameState.registerGenerator(generatorSolarPanel);
+//
+//
+//        PowerStorage storageCapacitor = GameAssetManager.INSTANCE.getPowerStorage("power-storage.capacitor");
+//        PowerStorageEntity storageEntity = new PowerStorageEntity(new Vector2(7, 6), storageCapacitor);
+//        gameState.registerPowerStorage(storageEntity);
+//
+//        Tower towerLaser = GameAssetManager.INSTANCE.getTower("tower.laser");
+//        TowerEntity towerEntity = new TowerEntity(new Vector2(10, 10), towerLaser);
+//        gameState.registerTower(towerEntity);
+//
+//        Conduit conduit = GameAssetManager.INSTANCE.getConduit("conduit.copper-wire");
+//        gameState.registerLink(conduit, generatorSolarPanel, storageEntity);
+//        gameState.registerLink(conduit, storageEntity, towerEntity);
+//    }
+
     private void populateGameStateWithDummyData() {
         Generator solarGenerator = GameAssetManager.INSTANCE.getGenerator("generator.solar-panel");
         GeneratorEntity generatorSolarPanel1 = new GeneratorEntity(new Vector2(4, 10), solarGenerator);

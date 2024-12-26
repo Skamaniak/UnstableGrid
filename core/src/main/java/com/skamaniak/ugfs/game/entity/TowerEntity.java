@@ -13,6 +13,7 @@ public class TowerEntity extends GameEntity implements PowerConsumer {
 
     private float powerBank = 0f;
     private float cumulativeDelta = 0;
+    private boolean propagated = false;
 
     public TowerEntity(Vector2 position, Tower tower) {
         super(position);
@@ -23,12 +24,16 @@ public class TowerEntity extends GameEntity implements PowerConsumer {
     public float consume(float power, float delta) {
         Tower.Level towerLevel = towerLevel();
 
-        powerBank = Math.max(powerBank - towerLevel.getPowerLossStandby() * delta, 0); // Simulate power loss
+        if(!propagated) {
+            // Simulate power loss (just once per propagation as the storage's consume method might be called from multiple conduits.
+            powerBank = Math.max(powerBank - towerLevel.getPowerLossStandby() * delta, 0);
+        }
 
         float newPowerBankState = Math.min(powerBank + power, towerLevel.getPowerStorage());
         float powerStored = newPowerBankState - powerBank;
         powerBank = newPowerBankState;
 
+        propagated = true;
         return power - powerStored;
     }
 
@@ -38,7 +43,7 @@ public class TowerEntity extends GameEntity implements PowerConsumer {
 
     @Override
     public void resetPropagation() {
-        // Nothing
+        propagated = false;
     }
 
     public boolean attemptShot(float delta) { //TODO what if delta is some huge number?

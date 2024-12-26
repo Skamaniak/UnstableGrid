@@ -42,20 +42,24 @@ public class PowerStorageEntity extends GameEntity implements PowerConsumer, Pow
 
     @Override
     public float consume(float power, float delta) {
-        propagated = true;
+
         PowerStorage.Level storageLevel = powerStorageLevel();
-
-        powerBank = Math.max(powerBank - storageLevel.getPowerLossStandby() * delta, 0); // Simulate power loss
-
-        float usablePower = power;
+        if (!propagated) {
+            // Simulate power loss (just once per propagation as the storage's consume method might be called from multiple conduits.
+            powerBank = Math.max(powerBank - storageLevel.getPowerLossStandby() * delta, 0);
+        }
+        float usablePower = power + powerBank;
+        float remainingPower = usablePower;
         for (PowerConsumer input : to) {
-            usablePower = input.consume(usablePower, delta);
+            remainingPower = input.consume(remainingPower, delta);
         }
 
-        float powerSent = power - usablePower;
-        float newPowerBankState = Math.min(powerBank + usablePower, storageLevel.getPowerStorage());
+        float powerSent = usablePower - remainingPower;
+        float newPowerBankState = Math.min(remainingPower, storageLevel.getPowerStorage());
         float powerStored = newPowerBankState - powerBank;
+
         powerBank = Math.max(newPowerBankState, 0); // rounding errors may send this to negative numbers
+        propagated = true;
 
         return power - (powerStored + powerSent);
     }

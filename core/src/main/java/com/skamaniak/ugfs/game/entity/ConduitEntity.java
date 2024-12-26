@@ -1,5 +1,6 @@
 package com.skamaniak.ugfs.game.entity;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -16,7 +17,9 @@ public class ConduitEntity implements PowerConsumer, Drawable {
     public PowerSource from;
     public PowerConsumer to;
 
-    private float powerTransferred = 0;
+    private float powerTransferred = 0f;
+    private float lastPowerTransferred = 0f;
+    private boolean propagated = false;
 
     public ConduitEntity(Conduit conduit, PowerSource from, PowerConsumer to) {
         this.conduit = conduit;
@@ -47,17 +50,25 @@ public class ConduitEntity implements PowerConsumer, Drawable {
 
     @Override
     public void resetPropagation() {
+        if (propagated) {
+            lastPowerTransferred = powerTransferred;
+        }
+        propagated = false;
         powerTransferred = 0f;
         to.resetPropagation();
     }
 
     @Override
     public float consume(float power, float delta) {
-        power = Math.max(power - conduit.getPowerTransferLoss() * delta, 0);
+        float usablePower = Math.max(power - conduit.getPowerTransferLoss() * delta, 0);
 
-        float transferablePower = Math.min(power, conduit.getPowerTransferRate() * delta - powerTransferred);
+        float transferablePower = Math.min(usablePower, conduit.getPowerTransferRate() * delta - powerTransferred);
         float powerLeft = to.consume(transferablePower, delta);
-        return power - (transferablePower - powerLeft);
+
+        powerTransferred += transferablePower - powerLeft;
+        propagated = true;
+
+        return usablePower - (transferablePower - powerLeft);
     }
 
     @Override
@@ -92,6 +103,9 @@ public class ConduitEntity implements PowerConsumer, Drawable {
             1, 1,                       // Scale
             angle                       // Rotation angle
         );
+        float transferCapacityUsed = lastPowerTransferred * 100 / (conduit.getPowerTransferRate() * Gdx.graphics.getDeltaTime());
+
+        GameAssetManager.INSTANCE.getFont().draw(batch, Math.round(transferCapacityUsed) + "%", x1 + (dx/2), y1 + (dy/2));
     }
 }
 
