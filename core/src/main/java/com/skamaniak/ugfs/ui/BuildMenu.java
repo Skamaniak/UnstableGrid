@@ -122,7 +122,7 @@ public class BuildMenu {
         return menu;
     }
 
-    private void resetBuildSelection() {
+    public void resetBuildSelection() {
         for (Button button : buildButtons) {
             button.setChecked(false);
         }

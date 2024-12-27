@@ -1,5 +1,6 @@
 package com.skamaniak.ugfs.input;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputAdapter;
 
 import java.util.HashSet;
@@ -16,6 +17,12 @@ public class Input extends InputAdapter {
             }
         }
         return false;
+    }
+
+
+
+    public boolean justClicked(int mouseButton) {
+        return Gdx.input.isButtonJustPressed(mouseButton);
     }
 
     @Override

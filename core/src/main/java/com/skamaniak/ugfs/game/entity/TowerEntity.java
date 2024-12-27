@@ -24,7 +24,7 @@ public class TowerEntity extends GameEntity implements PowerConsumer {
     public float consume(float power, float delta) {
         Tower.Level towerLevel = towerLevel();
 
-        if(!propagated) {
+        if (!propagated) {
             // Simulate power loss (just once per propagation as the storage's consume method might be called from multiple conduits.
             powerBank = Math.max(powerBank - towerLevel.getPowerLossStandby() * delta, 0);
         }

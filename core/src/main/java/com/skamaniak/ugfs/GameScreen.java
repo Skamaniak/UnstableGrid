@@ -9,10 +9,7 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.skamaniak.ugfs.asset.GameAssetManager;
 import com.skamaniak.ugfs.asset.model.*;
 import com.skamaniak.ugfs.game.GameState;
-import com.skamaniak.ugfs.game.entity.GameEntity;
-import com.skamaniak.ugfs.game.entity.GeneratorEntity;
-import com.skamaniak.ugfs.game.entity.PowerStorageEntity;
-import com.skamaniak.ugfs.game.entity.TowerEntity;
+import com.skamaniak.ugfs.game.entity.*;
 import com.skamaniak.ugfs.input.KeyboardControls;
 import com.skamaniak.ugfs.ui.BuildMenu;
 import com.skamaniak.ugfs.ui.DetailsMenu;
@@ -25,9 +22,11 @@ public class GameScreen implements Screen {
     private final UnstableGrid game;
     private final SceneCamera sceneCamera;
     private final FitViewport viewport;
+    private final GameEntityFactory gameEntityFactory;
 
-    private final Vector2 clickPosition = new Vector2();
+    private final Vector2 leftClickPosition = new Vector2();
     private final Vector2 mousePosition = new Vector2();
+    private boolean justClickedLeft = false;
 
     // UI
     private final BuildMenu buildMenu = new BuildMenu();
@@ -41,30 +40,10 @@ public class GameScreen implements Screen {
         this.sceneCamera = new SceneCamera(this.game.level.getLevelWidth() * GameAssetManager.TILE_SIZE_PX / 2,
             this.game.level.getLevelHeight() * GameAssetManager.TILE_SIZE_PX / 2);
         this.viewport = new FitViewport(WORLD_WIDTH, WORLD_HEIGHT, sceneCamera);
+        this.gameEntityFactory = new GameEntityFactory();
 
         populateGameStateWithDummyData();
-
-
     }
-
-//    private void populateGameStateWithDummyData() {
-//        Generator solarGenerator = GameAssetManager.INSTANCE.getGenerator("generator.solar-panel");
-//        GeneratorEntity generatorSolarPanel = new GeneratorEntity(new Vector2(4, 10), solarGenerator);
-//        gameState.registerGenerator(generatorSolarPanel);
-//
-//
-//        PowerStorage storageCapacitor = GameAssetManager.INSTANCE.getPowerStorage("power-storage.capacitor");
-//        PowerStorageEntity storageEntity = new PowerStorageEntity(new Vector2(7, 6), storageCapacitor);
-//        gameState.registerPowerStorage(storageEntity);
-//
-//        Tower towerLaser = GameAssetManager.INSTANCE.getTower("tower.laser");
-//        TowerEntity towerEntity = new TowerEntity(new Vector2(10, 10), towerLaser);
-//        gameState.registerTower(towerEntity);
-//
-//        Conduit conduit = GameAssetManager.INSTANCE.getConduit("conduit.copper-wire");
-//        gameState.registerLink(conduit, generatorSolarPanel, storageEntity);
-//        gameState.registerLink(conduit, storageEntity, towerEntity);
-//    }
 
     private void populateGameStateWithDummyData() {
         Generator solarGenerator = GameAssetManager.INSTANCE.getGenerator("generator.solar-panel");
@@ -116,11 +95,11 @@ public class GameScreen implements Screen {
         readInputs();
         updateCamera();
         gameState.simulate(delta);
+        handleBuilding();
         draw(delta);
     }
 
     private void readInputs() {
-
         if (game.input.isPressed(KeyboardControls.CAMERA_ZOOM_IN)) {
             sceneCamera.zoomIn();
         }
@@ -143,14 +122,16 @@ public class GameScreen implements Screen {
             System.out.println(Gdx.graphics.getFramesPerSecond());
         }
 
-        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
-            clickPosition.set(Gdx.input.getX(), Gdx.input.getY());
-            viewport.unproject(clickPosition);
+        justClickedLeft = game.input.justClicked(Input.Buttons.LEFT);
+        if (game.input.justClicked(Input.Buttons.LEFT)) {
+            leftClickPosition.set(Gdx.input.getX(), Gdx.input.getY());
+            viewport.unproject(leftClickPosition);
         }
 
         gameState.readInputs();
         buildMenu.handleInput();
         detailsMenu.handleInput();
+
         mousePosition.set(Gdx.input.getX(), Gdx.input.getY());
         viewport.unproject(mousePosition);
     }
@@ -168,6 +149,7 @@ public class GameScreen implements Screen {
         gameState.draw(delta);
 
         drawCursor();
+
         game.batch.end();
 
         buildMenu.draw();
@@ -181,26 +163,60 @@ public class GameScreen implements Screen {
             Level.Tile tile = gameState.getTerrainTile((int) mousePosition.x, (int) mousePosition.y);
             GameEntity gameEntity = gameState.getEntityAt((int) mousePosition.x, (int) mousePosition.y);
             if (tile != null) {
-                String texture;
                 Terrain terrain = GameAssetManager.INSTANCE.getTerrain(tile.getTerrainId());
-                if (gameEntity == null && selectedAsset.getBuildableOn().contains(terrain.getTerrainType())) {
+                boolean validBuildLocation = gameEntity == null
+                    && selectedAsset.getBuildableOn().contains(terrain.getTerrainType());
+
+                String texture;
+                if (validBuildLocation) {
                     texture = "assets/visual/valid-selection.png";
                 } else {
                     texture = "assets/visual/invalid-selection.png";
                 }
                 game.batch.draw(GameAssetManager.INSTANCE.loadTexture(texture),
-                    mousePosition.x - mousePosition.x % GameAssetManager.TILE_SIZE_PX,
-                    mousePosition.y - mousePosition.y % GameAssetManager.TILE_SIZE_PX);
+                    alignCoordinateWithMesh(mousePosition.x), alignCoordinateWithMesh(mousePosition.y));
             }
         } else {
             game.batch.draw(GameAssetManager.INSTANCE.loadTexture("assets/visual/select-reticle.png"),
-                clickPosition.x - clickPosition.x % GameAssetManager.TILE_SIZE_PX,
-                clickPosition.y - clickPosition.y % GameAssetManager.TILE_SIZE_PX);
-            GameEntity entity = gameState.getEntityAt((int) clickPosition.x, (int) clickPosition.y);
+                alignCoordinateWithMesh(leftClickPosition.x), alignCoordinateWithMesh(leftClickPosition.y));
+            GameEntity entity = gameState.getEntityAt((int) leftClickPosition.x, (int) leftClickPosition.y);
             if (entity != null) {
                 detailsMenu.showDetails(entity.getDetails());
             }
         }
+    }
+
+    private void handleBuilding() {
+        GameAsset selectedAsset = buildMenu.getSelectedAsset();
+        if (justClickedLeft && selectedAsset != null) {
+            Level.Tile tile = gameState.getTerrainTile((int) mousePosition.x, (int) mousePosition.y);
+            GameEntity gameEntity = gameState.getEntityAt((int) mousePosition.x, (int) mousePosition.y);
+            if (tile != null) {
+                Terrain terrain = GameAssetManager.INSTANCE.getTerrain(tile.getTerrainId());
+                boolean validBuildLocation = gameEntity == null
+                    && selectedAsset.getBuildableOn().contains(terrain.getTerrainType());
+
+                if (validBuildLocation) {
+                    buildMenu.resetBuildSelection();
+                    Vector2 position = meshVectorFromWorldVector(leftClickPosition);
+                    GameEntity newEntity = gameEntityFactory.createEntity(position, selectedAsset);
+                    gameState.registerEntity(newEntity);
+                }
+            }
+        }
+    }
+
+    private float alignCoordinateWithMesh(float coordinate) {
+        return coordinate - coordinate % GameAssetManager.TILE_SIZE_PX;
+    }
+
+    private Vector2 meshVectorFromWorldVector(Vector2 worldVector) {
+        return new Vector2(worldCoordinateIntoMeshCoordinate(worldVector.x),
+            worldCoordinateIntoMeshCoordinate(worldVector.y));
+    }
+
+    private int worldCoordinateIntoMeshCoordinate(float coordinate) {
+        return (int)coordinate / GameAssetManager.TILE_SIZE_PX;
     }
 
     @Override

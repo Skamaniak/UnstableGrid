@@ -3,6 +3,7 @@
   "name": "Tutorial Level",
   "description": "A tutorial level.",
   "assetType": "LEVEL",
+  "music": "audio/music/level/tutorial.wav",
   "scrap": 100,
   "levelWidth": 16,
   "levelHeight": 16,

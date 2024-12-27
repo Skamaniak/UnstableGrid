@@ -33,6 +33,21 @@ public class GameState {
 
         this.scrap = level.getScrap();
         this.grid = new PowerGrid();
+
+        GameAssetManager.INSTANCE.loadSound(level.getMusic()).loop(0.30f); //TODO take volume from settings
+
+    }
+
+    public void registerEntity(GameEntity entity) {
+        if (entity instanceof TowerEntity) {
+            registerTower((TowerEntity) entity);
+        } else if (entity instanceof PowerStorageEntity) {
+            registerPowerStorage((PowerStorageEntity) entity);
+        } else if (entity instanceof GeneratorEntity) {
+            registerGenerator((GeneratorEntity) entity);
+        } else {
+            throw new RuntimeException("Unknown entity " + entity);
+        }
     }
 
     public void registerTower(TowerEntity tower) {

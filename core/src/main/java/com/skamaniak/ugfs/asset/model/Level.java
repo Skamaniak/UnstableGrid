@@ -7,6 +7,7 @@ public class Level extends GameAsset {
     private int scrap;
     private int levelWidth;
     private int levelHeight;
+    private String music;
 
     public int getScrap() {
         return scrap;
@@ -18,6 +19,10 @@ public class Level extends GameAsset {
 
     public int getLevelHeight() {
         return levelHeight;
+    }
+
+    public String getMusic() {
+        return music;
     }
 
     public List<Tile> getMap() {
