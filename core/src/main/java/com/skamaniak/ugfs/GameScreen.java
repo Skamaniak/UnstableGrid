@@ -13,6 +13,7 @@ import com.skamaniak.ugfs.asset.model.*;
 import com.skamaniak.ugfs.game.GameState;
 import com.skamaniak.ugfs.game.entity.*;
 import com.skamaniak.ugfs.input.KeyboardControls;
+import com.skamaniak.ugfs.input.PlayerInput;
 import com.skamaniak.ugfs.ui.BuildMenu;
 import com.skamaniak.ugfs.ui.DetailsMenu;
 import com.skamaniak.ugfs.ui.WiringMenu;
@@ -26,9 +27,7 @@ public class GameScreen implements Screen {
     private final SceneCamera sceneCamera;
     private final FitViewport viewport;
     private final GameEntityFactory gameEntityFactory;
-
-    private final Vector2 leftClickPosition = new Vector2();
-    private final Vector2 mousePosition = new Vector2();
+    private final PlayerInput playerInput;
 
     // UI
     private final BuildMenu buildMenu = new BuildMenu();
@@ -38,7 +37,6 @@ public class GameScreen implements Screen {
     // Player Actions
     private final PlayerActionFactory playerActionFactory;
     private PlayerAction pendingPlayerAction;
-
 
     private GameState gameState;
 
@@ -52,6 +50,7 @@ public class GameScreen implements Screen {
 
         this.playerActionFactory = new PlayerActionFactory(gameState, this::showGameObjectDetails, this::buildGameObject);
         this.pendingPlayerAction = playerActionFactory.detailsSelection();
+        this.playerInput = new PlayerInput(viewport::unproject);
 
         populateGameStateWithDummyData();
     }
@@ -112,32 +111,30 @@ public class GameScreen implements Screen {
     }
 
     private void readInputs() {
-        if (game.input.isPressed(KeyboardControls.CAMERA_ZOOM_IN)) {
+        if (playerInput.isPressed(KeyboardControls.CAMERA_ZOOM_IN)) {
             sceneCamera.zoomIn();
         }
-        if (game.input.isPressed(KeyboardControls.CAMERA_ZOOM_OUT)) {
+        if (playerInput.isPressed(KeyboardControls.CAMERA_ZOOM_OUT)) {
             sceneCamera.zoomOut();
         }
-        if (game.input.isPressed(KeyboardControls.CAMERA_MOVE_UP)) {
+        if (playerInput.isPressed(KeyboardControls.CAMERA_MOVE_UP)) {
             sceneCamera.moveUp();
         }
-        if (game.input.isPressed(KeyboardControls.CAMERA_MOVE_DOWN)) {
+        if (playerInput.isPressed(KeyboardControls.CAMERA_MOVE_DOWN)) {
             sceneCamera.moveDown();
         }
-        if (game.input.isPressed(KeyboardControls.CAMERA_MOVE_RIGHT)) {
+        if (playerInput.isPressed(KeyboardControls.CAMERA_MOVE_RIGHT)) {
             sceneCamera.moveRight();
         }
-        if (game.input.isPressed(KeyboardControls.CAMERA_MOVE_LEFT)) {
+        if (playerInput.isPressed(KeyboardControls.CAMERA_MOVE_LEFT)) {
             sceneCamera.moveLeft();
         }
-        if (game.input.isPressed(KeyboardControls.DEBUG_SHOW_FPS)) {
+        if (playerInput.isPressed(KeyboardControls.DEBUG_SHOW_FPS)) {
             System.out.println(Gdx.graphics.getFramesPerSecond());
         }
 
-        if (game.input.justClicked(Input.Buttons.LEFT)) {
-            leftClickPosition.set(Gdx.input.getX(), Gdx.input.getY());
-            viewport.unproject(leftClickPosition);
-            pendingPlayerAction.handleClick(leftClickPosition);
+        if (playerInput.justClicked(Input.Buttons.LEFT)) {
+            pendingPlayerAction.handleClick(playerInput.getLeftClickPosition());
         }
 
         gameState.readInputs();
@@ -145,9 +142,7 @@ public class GameScreen implements Screen {
         detailsMenu.handleInput();
         wiringMenu.handleInput();
 
-        mousePosition.set(Gdx.input.getX(), Gdx.input.getY());
-        viewport.unproject(mousePosition);
-        pendingPlayerAction.handleMouseMove(mousePosition);
+        pendingPlayerAction.handleMouseMove(playerInput.getMousePosition());
     }
 
     private void updateCamera() {
@@ -174,8 +169,8 @@ public class GameScreen implements Screen {
         Conduit wiringConduit = wiringMenu.getSelectedConduit();
         if (buildAsset != null) {
             pendingPlayerAction = playerActionFactory.building(buildAsset);
-//        } else if (wiringConduit != null) { //TODO
-//            pendingPlayerAction = playerActionFactory.wiring();
+        } else if (wiringConduit != null) { //TODO
+            pendingPlayerAction = playerActionFactory.wiring(playerInput.getRightClickPosition(), wiringConduit);
         } else {
             pendingPlayerAction = playerActionFactory.detailsSelection();
         }
@@ -203,10 +198,10 @@ public class GameScreen implements Screen {
     @Override
     public void show() {
         InputMultiplexer multiplexer = new InputMultiplexer();
-        multiplexer.addProcessor(game.input);
         multiplexer.addProcessor(buildMenu.getStage());
         multiplexer.addProcessor(detailsMenu.getStage());
         multiplexer.addProcessor(wiringMenu.getStage());
+        multiplexer.addProcessor(playerInput);
         Gdx.input.setInputProcessor(multiplexer);
     }
 

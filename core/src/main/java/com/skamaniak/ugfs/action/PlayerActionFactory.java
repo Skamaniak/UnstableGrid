@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.skamaniak.ugfs.NavigationUtils;
 import com.skamaniak.ugfs.asset.GameAssetManager;
+import com.skamaniak.ugfs.asset.model.Conduit;
 import com.skamaniak.ugfs.asset.model.GameAsset;
 import com.skamaniak.ugfs.asset.model.Level;
 import com.skamaniak.ugfs.asset.model.Terrain;
@@ -25,7 +26,7 @@ public class PlayerActionFactory {
         detailsSelection = new DetailsSelection(gameState, detailsAction);
     }
 
-    public Wiring wiring() {
+    public Wiring wiring(Vector2 initialPosition, Conduit conduit) {
         // TODO init wiring
         return wiring;
     }
@@ -131,6 +132,8 @@ public class PlayerActionFactory {
             GameEntity entity = gameState.getEntityAt((int) clickPosition.x, (int) clickPosition.y);
             if (entity != null) {
                 showDetailsHandler.accept(entity.getDetails());
+            } else {
+                showDetailsHandler.accept("");
             }
         }
 

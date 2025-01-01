@@ -1,14 +1,25 @@
 package com.skamaniak.ugfs.input;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
+import com.badlogic.gdx.math.Vector2;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Function;
 
 
-public class Input extends InputAdapter {
+public class PlayerInput extends InputAdapter {
     private final Set<Integer> pressed = new HashSet<>();
+    private final Vector2 leftClickPosition = new Vector2();
+    private final Vector2 rightClickPosition = new Vector2();
+    private final Vector2 mousePosition = new Vector2();
+    private final Function<Vector2, Vector2> unproject;
+
+    public PlayerInput(Function<Vector2, Vector2> unproject) {
+        this.unproject = unproject;
+    }
 
     public boolean isPressed(KeyboardControls control) {
         for (int key : control.getKeys()) {
@@ -19,7 +30,17 @@ public class Input extends InputAdapter {
         return false;
     }
 
+    public Vector2 getLeftClickPosition() {
+        return leftClickPosition;
+    }
 
+    public Vector2 getRightClickPosition() {
+        return rightClickPosition;
+    }
+
+    public Vector2 getMousePosition() {
+        return mousePosition;
+    }
 
     public boolean justClicked(int mouseButton) {
         return Gdx.input.isButtonJustPressed(mouseButton);
@@ -42,9 +63,17 @@ public class Input extends InputAdapter {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+        if (button == Input.Buttons.LEFT) {
+            leftClickPosition.set(screenX, screenY);
+            unproject.apply(leftClickPosition);
+            return true;
+        } else if (button == Input.Buttons.RIGHT) {
+            rightClickPosition.set(screenX, screenY);
+            unproject.apply(rightClickPosition);
+            return true;
+        }
         return false;
     }
-
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
@@ -63,6 +92,8 @@ public class Input extends InputAdapter {
 
     @Override
     public boolean mouseMoved(int screenX, int screenY) {
+        mousePosition.set(screenX, screenY);
+        unproject.apply(mousePosition);
         return false;
     }
 
@@ -70,4 +101,5 @@ public class Input extends InputAdapter {
     public boolean scrolled(float amountX, float amountY) {
         return false;
     }
+
 }
