@@ -1,0 +1,12 @@
+{
+  "id": "conduit.superconductor",
+  "name": "Superconductor",
+  "description": "Superconductor can transfer immense amount of power. Despite being lossless, it needs to be constantly cooled so part of the power is used for cooling.",
+  "assetType": "CONDUIT",
+  "texture": "visual/conduit/superconductor.png",
+  "lineThickness": 8,
+  "powerTransferRate": 2000,
+  "powerTransferLoss": 20,
+  "connectRange": 4,
+  "scrapCost": 200
+}

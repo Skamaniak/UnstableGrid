@@ -17,7 +17,6 @@ import java.util.HashSet;
 
 public class BuildMenu {
     private final Stage stage;
-    private final Table buildMenu;
     private final Viewport viewport;
     private final Collection<Button> buildButtons = new HashSet<>();
     private final Label description;
@@ -30,7 +29,7 @@ public class BuildMenu {
         Skin skin = GameAssetManager.INSTANCE.getSkin();
 
         // Create and configure the menu table
-        buildMenu = new Table();
+        Table buildMenu = new Table();
         buildMenu.setFillParent(false);
 
 
@@ -72,7 +71,7 @@ public class BuildMenu {
         ChangeListener tab_listener = new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                resetBuildSelection();
+                resetSelection();
                 generatorMenu.setVisible(generatorTab.isChecked());
                 storageMenu.setVisible(storageTab.isChecked());
                 towerMenu.setVisible(towerTab.isChecked());
@@ -109,7 +108,7 @@ public class BuildMenu {
             button.addListener(new ClickListener(){
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
-                    resetBuildSelection();
+                    resetSelection();
                     button.setChecked(true);
                     description.setText(gameAsset.getDescription());
                     selectedAsset = gameAsset;
@@ -122,7 +121,7 @@ public class BuildMenu {
         return menu;
     }
 
-    public void resetBuildSelection() {
+    public void resetSelection() {
         for (Button button : buildButtons) {
             button.setChecked(false);
         }

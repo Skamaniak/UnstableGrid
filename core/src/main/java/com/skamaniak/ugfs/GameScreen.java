@@ -6,6 +6,8 @@ import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.skamaniak.ugfs.action.PlayerAction;
+import com.skamaniak.ugfs.action.PlayerActionFactory;
 import com.skamaniak.ugfs.asset.GameAssetManager;
 import com.skamaniak.ugfs.asset.model.*;
 import com.skamaniak.ugfs.game.GameState;
@@ -13,6 +15,7 @@ import com.skamaniak.ugfs.game.entity.*;
 import com.skamaniak.ugfs.input.KeyboardControls;
 import com.skamaniak.ugfs.ui.BuildMenu;
 import com.skamaniak.ugfs.ui.DetailsMenu;
+import com.skamaniak.ugfs.ui.WiringMenu;
 import com.skamaniak.ugfs.view.SceneCamera;
 
 public class GameScreen implements Screen {
@@ -26,11 +29,16 @@ public class GameScreen implements Screen {
 
     private final Vector2 leftClickPosition = new Vector2();
     private final Vector2 mousePosition = new Vector2();
-    private boolean justClickedLeft = false;
 
     // UI
     private final BuildMenu buildMenu = new BuildMenu();
     private final DetailsMenu detailsMenu = new DetailsMenu();
+    private final WiringMenu wiringMenu = new WiringMenu();
+
+    // Player Actions
+    private final PlayerActionFactory playerActionFactory;
+    private PlayerAction pendingPlayerAction;
+
 
     private GameState gameState;
 
@@ -41,6 +49,9 @@ public class GameScreen implements Screen {
             this.game.level.getLevelHeight() * GameAssetManager.TILE_SIZE_PX / 2);
         this.viewport = new FitViewport(WORLD_WIDTH, WORLD_HEIGHT, sceneCamera);
         this.gameEntityFactory = new GameEntityFactory();
+
+        this.playerActionFactory = new PlayerActionFactory(gameState, this::showGameObjectDetails, this::buildGameObject);
+        this.pendingPlayerAction = playerActionFactory.detailsSelection();
 
         populateGameStateWithDummyData();
     }
@@ -79,15 +90,16 @@ public class GameScreen implements Screen {
         TowerEntity towerEntity2 = new TowerEntity(new Vector2(10, 10), towerLaser);
         gameState.registerTower(towerEntity2);
 
-        Conduit conduit = GameAssetManager.INSTANCE.getConduit("conduit.copper-wire");
-        gameState.registerLink(conduit, generatorSolarPanel1, towerEntity2);
-        gameState.registerLink(conduit, generatorSolarPanel2, storageEntity);
-        gameState.registerLink(conduit, generatorSolarPanel3, storageEntity);
-        gameState.registerLink(conduit, generatorSolarPanel4, storageEntity);
-        gameState.registerLink(conduit, generatorSolarPanel4, storageEntity2);
-        gameState.registerLink(conduit, waterGenerator1, storageEntity2);
-        gameState.registerLink(conduit, storageEntity2, towerEntity);
-        gameState.registerLink(conduit, storageEntity, towerEntity2);
+        Conduit conduitCopper = GameAssetManager.INSTANCE.getConduit("conduit.copper-wire");
+        Conduit conduitAcsr = GameAssetManager.INSTANCE.getConduit("conduit.acsr");
+        gameState.registerLink(conduitCopper, generatorSolarPanel1, towerEntity2);
+        gameState.registerLink(conduitCopper, generatorSolarPanel2, storageEntity);
+        gameState.registerLink(conduitCopper, generatorSolarPanel3, storageEntity);
+        gameState.registerLink(conduitCopper, generatorSolarPanel4, storageEntity);
+        gameState.registerLink(conduitCopper, generatorSolarPanel4, storageEntity2);
+        gameState.registerLink(conduitAcsr, waterGenerator1, storageEntity2);
+        gameState.registerLink(conduitCopper, storageEntity2, towerEntity);
+        gameState.registerLink(conduitCopper, storageEntity, towerEntity2);
     }
 
     @Override
@@ -95,7 +107,7 @@ public class GameScreen implements Screen {
         readInputs();
         updateCamera();
         gameState.simulate(delta);
-        handleBuilding();
+        selectPlayerAction();
         draw(delta);
     }
 
@@ -122,18 +134,20 @@ public class GameScreen implements Screen {
             System.out.println(Gdx.graphics.getFramesPerSecond());
         }
 
-        justClickedLeft = game.input.justClicked(Input.Buttons.LEFT);
         if (game.input.justClicked(Input.Buttons.LEFT)) {
             leftClickPosition.set(Gdx.input.getX(), Gdx.input.getY());
             viewport.unproject(leftClickPosition);
+            pendingPlayerAction.handleClick(leftClickPosition);
         }
 
         gameState.readInputs();
         buildMenu.handleInput();
         detailsMenu.handleInput();
+        wiringMenu.handleInput();
 
         mousePosition.set(Gdx.input.getX(), Gdx.input.getY());
         viewport.unproject(mousePosition);
+        pendingPlayerAction.handleMouseMove(mousePosition);
     }
 
     private void updateCamera() {
@@ -144,79 +158,38 @@ public class GameScreen implements Screen {
     private void draw(float delta) {
         viewport.apply();
         game.batch.setProjectionMatrix(viewport.getCamera().combined);
+
         game.batch.begin();
-
         gameState.draw(delta);
-
-        drawCursor();
-
+        pendingPlayerAction.render(game.batch);
         game.batch.end();
 
         buildMenu.draw();
         detailsMenu.draw();
+        wiringMenu.draw();
     }
 
-    private void drawCursor() { //TODO temporal, also needs to take into account if there is anything already built on the tile
-        GameAsset selectedAsset = buildMenu.getSelectedAsset();
-
-        if (selectedAsset != null) {
-            Level.Tile tile = gameState.getTerrainTile((int) mousePosition.x, (int) mousePosition.y);
-            GameEntity gameEntity = gameState.getEntityAt((int) mousePosition.x, (int) mousePosition.y);
-            if (tile != null) {
-                Terrain terrain = GameAssetManager.INSTANCE.getTerrain(tile.getTerrainId());
-                boolean validBuildLocation = gameEntity == null
-                    && selectedAsset.getBuildableOn().contains(terrain.getTerrainType());
-
-                String texture;
-                if (validBuildLocation) {
-                    texture = "assets/visual/valid-selection.png";
-                } else {
-                    texture = "assets/visual/invalid-selection.png";
-                }
-                game.batch.draw(GameAssetManager.INSTANCE.loadTexture(texture),
-                    alignCoordinateWithMesh(mousePosition.x), alignCoordinateWithMesh(mousePosition.y));
-            }
+    private void selectPlayerAction() {
+        GameAsset buildAsset = buildMenu.getSelectedAsset();
+        Conduit wiringConduit = wiringMenu.getSelectedConduit();
+        if (buildAsset != null) {
+            pendingPlayerAction = playerActionFactory.building(buildAsset);
+//        } else if (wiringConduit != null) { //TODO
+//            pendingPlayerAction = playerActionFactory.wiring();
         } else {
-            game.batch.draw(GameAssetManager.INSTANCE.loadTexture("assets/visual/select-reticle.png"),
-                alignCoordinateWithMesh(leftClickPosition.x), alignCoordinateWithMesh(leftClickPosition.y));
-            GameEntity entity = gameState.getEntityAt((int) leftClickPosition.x, (int) leftClickPosition.y);
-            if (entity != null) {
-                detailsMenu.showDetails(entity.getDetails());
-            }
+            pendingPlayerAction = playerActionFactory.detailsSelection();
         }
     }
 
-    private void handleBuilding() {
-        GameAsset selectedAsset = buildMenu.getSelectedAsset();
-        if (justClickedLeft && selectedAsset != null) {
-            Level.Tile tile = gameState.getTerrainTile((int) mousePosition.x, (int) mousePosition.y);
-            GameEntity gameEntity = gameState.getEntityAt((int) mousePosition.x, (int) mousePosition.y);
-            if (tile != null) {
-                Terrain terrain = GameAssetManager.INSTANCE.getTerrain(tile.getTerrainId());
-                boolean validBuildLocation = gameEntity == null
-                    && selectedAsset.getBuildableOn().contains(terrain.getTerrainType());
-
-                if (validBuildLocation) {
-                    buildMenu.resetBuildSelection();
-                    Vector2 position = meshVectorFromWorldVector(leftClickPosition);
-                    GameEntity newEntity = gameEntityFactory.createEntity(position, selectedAsset);
-                    gameState.registerEntity(newEntity);
-                }
-            }
-        }
+    private void showGameObjectDetails(String details) {
+        detailsMenu.showDetails(details);
     }
 
-    private float alignCoordinateWithMesh(float coordinate) {
-        return coordinate - coordinate % GameAssetManager.TILE_SIZE_PX;
-    }
-
-    private Vector2 meshVectorFromWorldVector(Vector2 worldVector) {
-        return new Vector2(worldCoordinateIntoMeshCoordinate(worldVector.x),
-            worldCoordinateIntoMeshCoordinate(worldVector.y));
-    }
-
-    private int worldCoordinateIntoMeshCoordinate(float coordinate) {
-        return (int)coordinate / GameAssetManager.TILE_SIZE_PX;
+    private void buildGameObject(Vector2 position, GameAsset asset) {
+        buildMenu.resetSelection();
+        Vector2 entityPosition = NavigationUtils.meshVectorFromWorldVector(position);
+        GameEntity newEntity = gameEntityFactory.createEntity(entityPosition, asset);
+        gameState.registerEntity(newEntity);
     }
 
     @Override
@@ -224,6 +197,7 @@ public class GameScreen implements Screen {
         viewport.update(width, height);
         buildMenu.resize(width, height);
         detailsMenu.resize(width, height);
+        wiringMenu.resize(width, height);
     }
 
     @Override
@@ -232,6 +206,7 @@ public class GameScreen implements Screen {
         multiplexer.addProcessor(game.input);
         multiplexer.addProcessor(buildMenu.getStage());
         multiplexer.addProcessor(detailsMenu.getStage());
+        multiplexer.addProcessor(wiringMenu.getStage());
         Gdx.input.setInputProcessor(multiplexer);
     }
 
@@ -254,5 +229,6 @@ public class GameScreen implements Screen {
     public void dispose() {
         buildMenu.dispose();
         detailsMenu.dispose();
+        wiringMenu.dispose();
     }
 }

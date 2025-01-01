@@ -1,0 +1,12 @@
+{
+  "id": "conduit.acsr",
+  "name": "ACSR",
+  "description": "ACSR stands for Aluminium conductor steel reinforced and it is used for high-voltage long-distance power lines.",
+  "assetType": "CONDUIT",
+  "texture": "visual/conduit/acsr.png",
+  "lineThickness": 8,
+  "powerTransferRate": 400,
+  "powerTransferLoss": 1,
+  "connectRange": 8,
+  "scrapCost": 50
+}
