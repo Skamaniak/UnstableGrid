@@ -4,6 +4,7 @@ import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.skamaniak.ugfs.asset.GameAssetManager;
 import com.skamaniak.ugfs.asset.model.Level;
@@ -12,10 +13,12 @@ public class UnstableGrid extends Game {
 
     public Level level;
     public SpriteBatch batch;
+    public ShapeRenderer shapeRenderer;
     public BitmapFont font;
 
     public void create() {
         batch = new SpriteBatch();
+        shapeRenderer = new ShapeRenderer();
         level = GameAssetManager.INSTANCE.getLevel("level.tutorial"); //Tutorial
 
         // use libGDX's default font
@@ -32,6 +35,7 @@ public class UnstableGrid extends Game {
 
     public void dispose() {
         batch.dispose();
+        shapeRenderer.dispose();
         font.dispose();
     }
 }

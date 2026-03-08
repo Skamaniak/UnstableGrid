@@ -66,11 +66,11 @@ public class PlayerInput extends InputAdapter {
         if (button == Input.Buttons.LEFT) {
             leftClickPosition.set(screenX, screenY);
             unproject.apply(leftClickPosition);
-            return true;
+            return false;
         } else if (button == Input.Buttons.RIGHT) {
             rightClickPosition.set(screenX, screenY);
             unproject.apply(rightClickPosition);
-            return true;
+            return false;
         }
         return false;
     }

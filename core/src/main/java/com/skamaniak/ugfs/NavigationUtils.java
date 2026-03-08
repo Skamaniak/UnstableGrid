@@ -4,8 +4,14 @@ import com.badlogic.gdx.math.Vector2;
 import com.skamaniak.ugfs.asset.GameAssetManager;
 
 public class NavigationUtils {
+
+
     public static float alignCoordinateWithMesh(float coordinate) {
-        return coordinate - coordinate % GameAssetManager.TILE_SIZE_PX;
+        return alignCoordinateWithMesh(coordinate, 0f);
+    }
+
+    public static float alignCoordinateWithMesh(float coordinate, float offset) {
+        return (coordinate - coordinate % GameAssetManager.TILE_SIZE_PX) + offset;
     }
 
     public static Vector2 meshVectorFromWorldVector(Vector2 worldVector) {

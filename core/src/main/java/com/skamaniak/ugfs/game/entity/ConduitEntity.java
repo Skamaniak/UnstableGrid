@@ -55,7 +55,6 @@ public class ConduitEntity implements PowerConsumer, Drawable {
         }
         propagated = false;
         powerTransferred = 0f;
-        to.resetPropagation();
     }
 
     @Override
@@ -76,11 +75,40 @@ public class ConduitEntity implements PowerConsumer, Drawable {
         if (from instanceof GameEntity && to instanceof GameEntity) {
             Vector2 fromPosition = ((GameEntity) from).position;
             Vector2 toPosition = ((GameEntity) to).position;
-            drawLine(batch,
-                fromPosition.x * GameAssetManager.TILE_SIZE_PX + GameAssetManager.TILE_SIZE_PX / 2,
-                fromPosition.y * GameAssetManager.TILE_SIZE_PX + GameAssetManager.TILE_SIZE_PX / 2,
-                toPosition.x * GameAssetManager.TILE_SIZE_PX + GameAssetManager.TILE_SIZE_PX / 2,
-                toPosition.y * GameAssetManager.TILE_SIZE_PX + GameAssetManager.TILE_SIZE_PX / 2);
+
+            float x1 = fromPosition.x * GameAssetManager.TILE_SIZE_PX + GameAssetManager.TILE_SIZE_PX / 2f;
+            float y1 = fromPosition.y * GameAssetManager.TILE_SIZE_PX + GameAssetManager.TILE_SIZE_PX / 2f;
+            float x2 = toPosition.x * GameAssetManager.TILE_SIZE_PX + GameAssetManager.TILE_SIZE_PX / 2f;
+            float y2 = toPosition.y * GameAssetManager.TILE_SIZE_PX + GameAssetManager.TILE_SIZE_PX / 2f;
+
+            float dx = x2 - x1;
+            float dy = y2 - y1;
+            float length = (float) Math.sqrt(dx * dx + dy * dy);
+
+            if (length > 0) {
+                // Offset perpendicular to the wire so parallel wires (e.g. A→B and B→A) don't overlap.
+                // The perpendicular is computed from the canonically "lesser" endpoint to avoid the
+                // direction flipping for opposite-direction wires (which would cancel the sign and
+                // offset both wires the same way).
+                boolean fromIsLess = (fromPosition.x < toPosition.x)
+                    || (fromPosition.x == toPosition.x && fromPosition.y < toPosition.y);
+                Vector2 lessPos = fromIsLess ? fromPosition : toPosition;
+                Vector2 greaterPos = fromIsLess ? toPosition : fromPosition;
+                float cdx = (greaterPos.x - lessPos.x) * GameAssetManager.TILE_SIZE_PX;
+                float cdy = (greaterPos.y - lessPos.y) * GameAssetManager.TILE_SIZE_PX;
+                float clength = (float) Math.sqrt(cdx * cdx + cdy * cdy);
+                float canonicalPerpX = -cdy / clength;
+                float canonicalPerpY = cdx / clength;
+
+                float sign = fromIsLess ? 1f : -1f;
+                float offsetAmount = conduit.getLineThickness() * 2f * sign;
+                x1 += canonicalPerpX * offsetAmount;
+                y1 += canonicalPerpY * offsetAmount;
+                x2 += canonicalPerpX * offsetAmount;
+                y2 += canonicalPerpY * offsetAmount;
+            }
+
+            drawLine(batch, x1, y1, x2, y2);
         }
     }
 

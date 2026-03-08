@@ -1,6 +1,7 @@
 package com.skamaniak.ugfs.game;
 
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.skamaniak.ugfs.UnstableGrid;
 import com.skamaniak.ugfs.asset.GameAssetManager;
@@ -34,7 +35,7 @@ public class GameState {
         this.scrap = level.getScrap();
         this.grid = new PowerGrid();
 
-        GameAssetManager.INSTANCE.loadSound(level.getMusic()).loop(0.30f); //TODO take volume from settings
+        GameAssetManager.INSTANCE.loadSound(level.getMusic()).loop(0.15f); //TODO take volume from settings
 
     }
 
@@ -76,8 +77,13 @@ public class GameState {
         grid.removeConduit(conduit);
         // TODO add scrap back
     }
+
     public void readInputs() {
         // TODO read inputs
+    }
+
+    public Level.Tile getTerrainTile(Vector2 coordinates) {
+        return getTerrainTile((int) coordinates.x, (int) coordinates.y);
     }
 
     public Level.Tile getTerrainTile(int x, int y) {
@@ -89,6 +95,10 @@ public class GameState {
             }
         }
         return null;
+    }
+
+    public GameEntity getEntityAt(Vector2 coordinates) {
+        return getEntityAt((int) coordinates.x, (int) coordinates.y);
     }
 
     public GameEntity getEntityAt(int x, int y) {
@@ -134,13 +144,16 @@ public class GameState {
 
     }
 
-    public void draw(float delta) {
+    public void drawTextures(float delta) {
         drawTerrain();
         drawGameEntities();
 
         // TODO Draw UI
-        // TODO Draw Game entities
         // TODO Draw projectiles, effects, etc.
+    }
+
+    public void drawShapes(ShapeRenderer shapeRenderer) {
+        // TODO
     }
 
     private void drawTerrain() {
@@ -152,19 +165,19 @@ public class GameState {
     }
 
     private void drawGameEntities() {
-        for (ConduitEntity conduit: conduits) {
+        for (ConduitEntity conduit : conduits) {
             conduit.draw(game.batch);
         }
 
-        for (GeneratorEntity generator: generators) {
+        for (GeneratorEntity generator : generators) {
             generator.draw(game.batch);
         }
 
-        for (PowerStorageEntity storage: storages) {
+        for (PowerStorageEntity storage : storages) {
             storage.draw(game.batch);
         }
 
-        for (TowerEntity tower: towers) {
+        for (TowerEntity tower : towers) {
             tower.draw(game.batch);
         }
     }

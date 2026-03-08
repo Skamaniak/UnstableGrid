@@ -1,6 +1,7 @@
 package com.skamaniak.ugfs.ui;
 
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -11,14 +12,18 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.skamaniak.ugfs.asset.GameAssetManager;
 import com.skamaniak.ugfs.asset.model.Conduit;
 
+import java.util.function.Supplier;
+
 public class WiringMenu {
     private final Stage stage;
     private final Viewport viewport;
+    private final Supplier<Boolean> openMenuTest;
     private Conduit selectedConduit;
 
-    public WiringMenu() {
+    public WiringMenu(SpriteBatch batch, Supplier<Boolean> openMenuTest) {
         this.viewport = new ScreenViewport();
-        this.stage = new Stage(viewport);
+        this.stage = new Stage(viewport, batch);
+        this.openMenuTest = openMenuTest;
         Table menu = createMenu();
         setupInputListener(menu);
         stage.addActor(menu);
@@ -50,14 +55,13 @@ public class WiringMenu {
         stage.addListener(new InputListener() {
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                if (button == Input.Buttons.RIGHT) {
+                if (button == Input.Buttons.RIGHT && openMenuTest.get()) {
                     menuTable.setPosition(x, y);
                     menuTable.setVisible(true);
-                    return true;
-                } else if (button == Input.Buttons.LEFT && menuTable.isVisible()) {
+                    resetSelection();
+                } else if (menuTable.isVisible()) {
                     menuTable.setVisible(false);
                     resetSelection();
-                    return true;
                 }
                 return false;
             }

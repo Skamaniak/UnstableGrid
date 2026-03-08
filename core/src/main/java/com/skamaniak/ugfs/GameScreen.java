@@ -4,6 +4,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.skamaniak.ugfs.action.PlayerAction;
@@ -14,6 +16,7 @@ import com.skamaniak.ugfs.game.GameState;
 import com.skamaniak.ugfs.game.entity.*;
 import com.skamaniak.ugfs.input.KeyboardControls;
 import com.skamaniak.ugfs.input.PlayerInput;
+import com.skamaniak.ugfs.simulation.PowerProducer;
 import com.skamaniak.ugfs.ui.BuildMenu;
 import com.skamaniak.ugfs.ui.DetailsMenu;
 import com.skamaniak.ugfs.ui.WiringMenu;
@@ -30,9 +33,9 @@ public class GameScreen implements Screen {
     private final PlayerInput playerInput;
 
     // UI
-    private final BuildMenu buildMenu = new BuildMenu();
-    private final DetailsMenu detailsMenu = new DetailsMenu();
-    private final WiringMenu wiringMenu = new WiringMenu();
+    private final BuildMenu buildMenu;
+    private final DetailsMenu detailsMenu;
+    private final WiringMenu wiringMenu;
 
     // Player Actions
     private final PlayerActionFactory playerActionFactory;
@@ -48,9 +51,14 @@ public class GameScreen implements Screen {
         this.viewport = new FitViewport(WORLD_WIDTH, WORLD_HEIGHT, sceneCamera);
         this.gameEntityFactory = new GameEntityFactory();
 
-        this.playerActionFactory = new PlayerActionFactory(gameState, this::showGameObjectDetails, this::buildGameObject);
-        this.pendingPlayerAction = playerActionFactory.detailsSelection();
         this.playerInput = new PlayerInput(viewport::unproject);
+
+        this.buildMenu = new BuildMenu(unstableGrid.batch);
+        this.detailsMenu = new DetailsMenu(unstableGrid.batch);
+        this.wiringMenu = new WiringMenu(unstableGrid.batch, this::shouldWiringMenuOpen);
+
+        this.playerActionFactory = new PlayerActionFactory(gameState, playerInput, this::showGameObjectDetails, this::buildGameObject, wiringMenu::resetSelection);
+        this.pendingPlayerAction = playerActionFactory.detailsSelection();
 
         populateGameStateWithDummyData();
     }
@@ -152,12 +160,21 @@ public class GameScreen implements Screen {
 
     private void draw(float delta) {
         viewport.apply();
-        game.batch.setProjectionMatrix(viewport.getCamera().combined);
 
+        game.batch.setProjectionMatrix(viewport.getCamera().combined);
         game.batch.begin();
-        gameState.draw(delta);
-        pendingPlayerAction.render(game.batch);
+        gameState.drawTextures(delta);
+        pendingPlayerAction.drawTextures(game.batch);
         game.batch.end();
+
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        game.shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
+        game.shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        gameState.drawShapes(game.shapeRenderer);
+        pendingPlayerAction.drawShapes(game.shapeRenderer);
+        game.shapeRenderer.end();
+        Gdx.gl.glDisable(GL20.GL_BLEND);
 
         buildMenu.draw();
         detailsMenu.draw();
@@ -167,13 +184,20 @@ public class GameScreen implements Screen {
     private void selectPlayerAction() {
         GameAsset buildAsset = buildMenu.getSelectedAsset();
         Conduit wiringConduit = wiringMenu.getSelectedConduit();
-        if (buildAsset != null) {
+        GameEntity gameEntity = gameState.getEntityAt(playerInput.getRightClickPosition());
+
+        if (wiringConduit != null && gameEntity instanceof PowerProducer) {
+            pendingPlayerAction = playerActionFactory.wiring(gameEntity, wiringConduit);
+        } else if (buildAsset != null) { //TODO
             pendingPlayerAction = playerActionFactory.building(buildAsset);
-        } else if (wiringConduit != null) { //TODO
-            pendingPlayerAction = playerActionFactory.wiring(playerInput.getRightClickPosition(), wiringConduit);
         } else {
             pendingPlayerAction = playerActionFactory.detailsSelection();
         }
+    }
+
+    private boolean shouldWiringMenuOpen() {
+        GameEntity gameEntity = gameState.getEntityAt(playerInput.getRightClickPosition());
+        return gameEntity instanceof PowerProducer;
     }
 
     private void showGameObjectDetails(String details) {
@@ -198,10 +222,10 @@ public class GameScreen implements Screen {
     @Override
     public void show() {
         InputMultiplexer multiplexer = new InputMultiplexer();
+        multiplexer.addProcessor(playerInput);
         multiplexer.addProcessor(buildMenu.getStage());
         multiplexer.addProcessor(detailsMenu.getStage());
         multiplexer.addProcessor(wiringMenu.getStage());
-        multiplexer.addProcessor(playerInput);
         Gdx.input.setInputProcessor(multiplexer);
     }
 

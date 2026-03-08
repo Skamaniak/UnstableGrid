@@ -1,5 +1,6 @@
 package com.skamaniak.ugfs.ui;
 
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -23,9 +24,9 @@ public class BuildMenu {
 
     private GameAsset selectedAsset;
 
-    public BuildMenu() {
+    public BuildMenu(SpriteBatch batch) {
         this.viewport = new ScreenViewport();
-        this.stage = new Stage(this.viewport);
+        this.stage = new Stage(this.viewport, batch);
         Skin skin = GameAssetManager.INSTANCE.getSkin();
 
         // Create and configure the menu table

@@ -1,6 +1,7 @@
 package com.skamaniak.ugfs.action;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 
 public interface PlayerAction {
@@ -8,5 +9,7 @@ public interface PlayerAction {
 
     void handleMouseMove(Vector2 mousePosition);
 
-    void render(SpriteBatch batch);
+    void drawTextures(SpriteBatch batch);
+
+    void drawShapes(ShapeRenderer shapeRenderer);
 }
