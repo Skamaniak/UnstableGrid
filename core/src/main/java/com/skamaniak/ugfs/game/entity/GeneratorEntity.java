@@ -36,9 +36,7 @@ public class GeneratorEntity extends GameEntity implements PowerProducer {
 
     @Override
     public void resetPropagation() {
-        for (PowerConsumer powerConsumer : to) {
-            powerConsumer.resetPropagation();
-        }
+        // PowerGrid resets all entities directly; no recursive traversal needed
     }
 
     @Override

@@ -6,7 +6,9 @@ import com.skamaniak.ugfs.game.entity.GeneratorEntity;
 import com.skamaniak.ugfs.game.entity.PowerStorageEntity;
 import com.skamaniak.ugfs.game.entity.TowerEntity;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class PowerGrid {
@@ -22,11 +24,13 @@ public class PowerGrid {
     }
 
     public boolean removeSource(GeneratorEntity source) {
+        List<ConduitEntity> toRemove = new ArrayList<>();
         for (ConduitEntity conduit : conduits) {
-            if (conduit.from == source) {
-                source.removeTo(conduit.to);
-                removeConduit(conduit);
-            }
+            if (conduit.from == source) toRemove.add(conduit);
+        }
+        for (ConduitEntity conduit : toRemove) {
+            source.removeTo(conduit.to);
+            removeConduit(conduit);
         }
         return sources.remove(source);
     }
@@ -36,17 +40,7 @@ public class PowerGrid {
     }
 
     public boolean addStorage(PowerStorageEntity storage) {
-        for (ConduitEntity conduit : conduits) {
-            if (conduit.from == storage) {
-                storage.removeTo(conduit.to);
-                removeConduit(conduit);
-            }
-            if (conduit.to == storage) {
-                conduit.from.removeTo(storage);
-                removeConduit(conduit);
-            }
-        }
-        return storages.remove(storage);
+        return storages.add(storage);
     }
 
     public boolean removeStorage(PowerStorageEntity storage) {
@@ -62,11 +56,13 @@ public class PowerGrid {
     }
 
     public boolean removeSink(TowerEntity sink) {
+        List<ConduitEntity> toRemove = new ArrayList<>();
         for (ConduitEntity conduit : conduits) {
-            if (conduit.to == sink) {
-                conduit.from.removeTo(sink);
-                removeConduit(conduit);
-            }
+            if (conduit.to == sink) toRemove.add(conduit);
+        }
+        for (ConduitEntity conduit : toRemove) {
+            conduit.from.removeTo(sink);
+            removeConduit(conduit);
         }
         return sinks.remove(sink);
     }
@@ -90,20 +86,22 @@ public class PowerGrid {
     }
 
     private void resetPropagation() {
-        for (GeneratorEntity producer : sources) {
-            producer.resetPropagation();
-        }
         for (PowerStorageEntity storage : storages) {
             storage.resetPropagation();
+        }
+        for (TowerEntity sink : sinks) {
+            sink.resetPropagation();
+        }
+        for (ConduitEntity conduit : conduits) {
+            conduit.resetPropagation();
         }
     }
 
     public void simulatePropagation(float delta) {
-        if (delta > 1f) {
-            Gdx.app.error(PowerGrid.class.getName(), "Delta between frames is more than 1 second (" + delta + "). The game seems to be lagging.");
-        }
-
-        while (delta != 0f) {
+        while (delta > 0f) {
+            if (delta > 1f) {
+                Gdx.app.error(PowerGrid.class.getName(), "Delta between frames is more than 1 second (" + delta + "). The game seems to be lagging.");
+            }
             float partialDelta = Math.min(1f, delta);
             delta -= partialDelta;
             resetPropagation();

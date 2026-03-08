@@ -17,6 +17,7 @@ public class PowerStorageEntity extends GameEntity implements PowerConsumer, Pow
     private int level = 1;
 
     private float powerBank = 0f;
+    private boolean inProgress = false;
     private boolean propagated = false;
 
     private final Set<PowerConsumer> to = new HashSet<>();
@@ -42,12 +43,28 @@ public class PowerStorageEntity extends GameEntity implements PowerConsumer, Pow
 
     @Override
     public float consume(float power, float delta) {
-
         PowerStorage.Level storageLevel = powerStorageLevel();
-        if (!propagated) {
-            // Simulate power loss (just once per propagation as the storage's consume method might be called from multiple conduits.
-            powerBank = Math.max(powerBank - storageLevel.getPowerLossStandby() * delta, 0);
+
+        if (inProgress) {
+            // Cycle detected: this storage is already mid-propagation upstream.
+            // Refuse the power so the caller keeps it in its own bank.
+            return power;
         }
+
+        if (propagated) {
+            // Already fully processed this frame by another incoming conduit.
+            // Just absorb what we can without forwarding downstream again.
+            float newPowerBankState = Math.min(powerBank + power, storageLevel.getPowerStorage());
+            float powerStored = newPowerBankState - powerBank;
+            powerBank = newPowerBankState;
+            return power - powerStored;
+        }
+
+        inProgress = true;
+
+        // Standby loss applied once per frame.
+        powerBank = Math.max(powerBank - storageLevel.getPowerLossStandby() * delta, 0);
+
         float usablePower = power + powerBank;
         float remainingPower = usablePower;
         for (PowerConsumer input : to) {
@@ -59,6 +76,8 @@ public class PowerStorageEntity extends GameEntity implements PowerConsumer, Pow
         float powerStored = newPowerBankState - powerBank;
 
         powerBank = Math.max(newPowerBankState, 0); // rounding errors may send this to negative numbers
+
+        inProgress = false;
         propagated = true;
 
         return power - (powerStored + powerSent);
@@ -70,11 +89,8 @@ public class PowerStorageEntity extends GameEntity implements PowerConsumer, Pow
 
     @Override
     public void resetPropagation() {
+        inProgress = false;
         propagated = false;
-
-        for (PowerConsumer powerConsumer : to) {
-            powerConsumer.resetPropagation();
-        }
     }
 
     @Override
