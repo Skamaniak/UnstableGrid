@@ -21,7 +21,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ./gradlew lwjgl3:dist
 ```
 
-There are no tests in this project currently.
+## Testing
+
+```bash
+# Run unit tests
+./gradlew core:test
+```
+
+Tests use JUnit 5 + Mockito. Test sources are in `core/src/test/`.
 
 ## Architecture
 
@@ -94,6 +101,30 @@ Two coordinate spaces: **world coordinates** (pixels, 64px per tile) and **mesh/
 - Game assets (textures, sounds, skin) live under `assets/` at the project root. The `assets/` directory is the working directory at runtime.
 - Asset paths in code are relative to `assets/` (e.g., `"assets/visual/select-reticle.png"`).
 - The Gradle wrapper is configured with Java source/target compatibility 8, but `KeyboardControls` uses `Set.of()` which requires Java 9+. This works at runtime on modern JVMs but would break a strict JDK 8 toolchain.
+
+## Refactoring & Testing Guidelines
+
+### Performance-first approach
+- This is a game running at 60+ FPS. Do NOT introduce indirection (interfaces, callbacks, dependency injection) on hot paths (simulation, rendering) just for testability.
+- Static singletons like `GameAssetManager.INSTANCE` are intentional and idiomatic for game development. Do not refactor them into injected dependencies.
+- `static final` constants are free — the JVM inlines them at compile time.
+
+### What is testable without refactoring
+- Entity logic methods (`consume()`, `produce()`, `attemptShot()`) are pure computation — no static calls, fully testable with mocked asset objects.
+- `PowerGrid.simulatePropagation()` is testable (uses `java.util.logging` instead of `Gdx.app`).
+- `NavigationUtils` coordinate conversions are pure math.
+- `ConduitEntity.consume()` rate limiting and loss logic is pure math.
+
+### What requires LibGDX and is NOT unit tested
+- All `draw()` methods (texture loading via `GameAssetManager.INSTANCE`).
+- `GameState.simulateShooting()` (plays sounds via `GameAssetManager.INSTANCE`).
+- `Building.isBuildable()` (terrain lookup via `GameAssetManager.INSTANCE`).
+- UI classes (`BuildMenu`, `DetailsMenu`, `WiringMenu`).
+
+### Mocking strategy
+- Asset model classes (`Generator`, `Tower`, `PowerStorage`, `Conduit`) have private fields with no setters (designed for JSON deserialization). Use **Mockito mocks** to create test instances — do NOT add setters or constructors to production code for testing purposes.
+- Use `TestAssetFactory` helper class in `core/src/test/` for creating mocked assets with configurable stats.
+- `GameConstants.TILE_SIZE_PX` provides the tile size constant without importing `GameAssetManager`.
 
 ## Known Issues & Incomplete Areas
 

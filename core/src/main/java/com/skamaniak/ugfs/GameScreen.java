@@ -46,6 +46,7 @@ public class GameScreen implements Screen {
     public GameScreen(UnstableGrid unstableGrid) {
         this.game = unstableGrid;
         this.gameState = new GameState(game, game.level);
+        GameAssetManager.INSTANCE.loadSound(game.level.getMusic()).loop(0.15f); //TODO take volume from settings
         this.sceneCamera = new SceneCamera(this.game.level.getLevelWidth() * GameAssetManager.TILE_SIZE_PX / 2,
             this.game.level.getLevelHeight() * GameAssetManager.TILE_SIZE_PX / 2);
         this.viewport = new FitViewport(WORLD_WIDTH, WORLD_HEIGHT, sceneCamera);

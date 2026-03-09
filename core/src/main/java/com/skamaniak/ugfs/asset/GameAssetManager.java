@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.skamaniak.ugfs.GameConstants;
 import com.skamaniak.ugfs.asset.model.*;
 
 import java.util.Collection;
@@ -14,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class GameAssetManager {
-    public static final int TILE_SIZE_PX = 64;
+    public static final int TILE_SIZE_PX = GameConstants.TILE_SIZE_PX;
     public static GameAssetManager INSTANCE = new GameAssetManager();
 
     // Game Objects

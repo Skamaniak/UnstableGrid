@@ -1,7 +1,6 @@
 package com.skamaniak.ugfs;
 
 import com.badlogic.gdx.math.Vector2;
-import com.skamaniak.ugfs.asset.GameAssetManager;
 
 public class NavigationUtils {
 
@@ -11,7 +10,7 @@ public class NavigationUtils {
     }
 
     public static float alignCoordinateWithMesh(float coordinate, float offset) {
-        return (coordinate - coordinate % GameAssetManager.TILE_SIZE_PX) + offset;
+        return (coordinate - coordinate % GameConstants.TILE_SIZE_PX) + offset;
     }
 
     public static Vector2 meshVectorFromWorldVector(Vector2 worldVector) {
@@ -20,6 +19,6 @@ public class NavigationUtils {
     }
 
     public static int worldCoordinateIntoMeshCoordinate(float coordinate) {
-        return (int) coordinate / GameAssetManager.TILE_SIZE_PX;
+        return (int) coordinate / GameConstants.TILE_SIZE_PX;
     }
 }

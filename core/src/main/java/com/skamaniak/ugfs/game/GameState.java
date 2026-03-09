@@ -3,6 +3,7 @@ package com.skamaniak.ugfs.game;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
+import com.skamaniak.ugfs.GameConstants;
 import com.skamaniak.ugfs.UnstableGrid;
 import com.skamaniak.ugfs.asset.GameAssetManager;
 import com.skamaniak.ugfs.asset.model.Conduit;
@@ -42,9 +43,6 @@ public class GameState {
         for (Level.Tile tile : level.getMap()) {
             tileByPosition.put(tileKey(tile.getX(), tile.getY()), tile);
         }
-
-        GameAssetManager.INSTANCE.loadSound(level.getMusic()).loop(0.15f); //TODO take volume from settings
-
     }
 
     public void registerEntity(GameEntity entity) {
@@ -100,7 +98,7 @@ public class GameState {
     }
 
     public Level.Tile getTerrainTile(int x, int y) {
-        return tileByPosition.get(tileKey(x / GameAssetManager.TILE_SIZE_PX, y / GameAssetManager.TILE_SIZE_PX));
+        return tileByPosition.get(tileKey(x / GameConstants.TILE_SIZE_PX, y / GameConstants.TILE_SIZE_PX));
     }
 
     public GameEntity getEntityAt(Vector2 coordinates) {
@@ -108,7 +106,7 @@ public class GameState {
     }
 
     public GameEntity getEntityAt(int x, int y) {
-        return entityByPosition.get(tileKey(x / GameAssetManager.TILE_SIZE_PX, y / GameAssetManager.TILE_SIZE_PX));
+        return entityByPosition.get(tileKey(x / GameConstants.TILE_SIZE_PX, y / GameConstants.TILE_SIZE_PX));
     }
 
     private static String positionKey(GameEntity entity) {
@@ -152,8 +150,8 @@ public class GameState {
     private void drawTerrain() {
         level.getMap().forEach(tile -> {
             TextureRegion texture = GameAssetManager.INSTANCE.loadTerrainTileTexture(tile);
-            game.batch.draw(texture, tile.getX() * GameAssetManager.TILE_SIZE_PX,
-                tile.getY() * GameAssetManager.TILE_SIZE_PX);
+            game.batch.draw(texture, tile.getX() * GameConstants.TILE_SIZE_PX,
+                tile.getY() * GameConstants.TILE_SIZE_PX);
         });
     }
 

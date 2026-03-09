@@ -1,6 +1,5 @@
 package com.skamaniak.ugfs.simulation;
 
-import com.badlogic.gdx.Gdx;
 import com.skamaniak.ugfs.game.entity.ConduitEntity;
 import com.skamaniak.ugfs.game.entity.GeneratorEntity;
 import com.skamaniak.ugfs.game.entity.PowerStorageEntity;
@@ -10,8 +9,11 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 public class PowerGrid {
+    private static final Logger LOG = Logger.getLogger(PowerGrid.class.getName());
+
     //TODO do not try to fill power path one by one, try to split the power among more paths during simulation
 
     private final Set<GeneratorEntity> sources = new HashSet<>();
@@ -100,7 +102,7 @@ public class PowerGrid {
     public void simulatePropagation(float delta) {
         while (delta > 0f) {
             if (delta > 1f) {
-                Gdx.app.error(PowerGrid.class.getName(), "Delta between frames is more than 1 second (" + delta + "). The game seems to be lagging.");
+                LOG.warning("Delta between frames is more than 1 second (" + delta + "). The game seems to be lagging.");
             }
             float partialDelta = Math.min(1f, delta);
             delta -= partialDelta;
