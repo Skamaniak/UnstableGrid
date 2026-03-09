@@ -12,8 +12,9 @@ import com.skamaniak.ugfs.simulation.PowerConsumer;
 import com.skamaniak.ugfs.simulation.PowerGrid;
 import com.skamaniak.ugfs.simulation.PowerSource;
 
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class GameState {
@@ -26,6 +27,9 @@ public class GameState {
     private final Set<TowerEntity> towers = new HashSet<>();
     private final Set<ConduitEntity> conduits = new HashSet<>();
 
+    private final Map<String, GameEntity> entityByPosition = new HashMap<>();
+    private final Map<String, Level.Tile> tileByPosition = new HashMap<>();
+
     private int scrap;
 
     public GameState(UnstableGrid game, Level level) {
@@ -34,6 +38,10 @@ public class GameState {
 
         this.scrap = level.getScrap();
         this.grid = new PowerGrid();
+
+        for (Level.Tile tile : level.getMap()) {
+            tileByPosition.put(tileKey(tile.getX(), tile.getY()), tile);
+        }
 
         GameAssetManager.INSTANCE.loadSound(level.getMusic()).loop(0.15f); //TODO take volume from settings
 
@@ -53,22 +61,27 @@ public class GameState {
 
     public void registerTower(TowerEntity tower) {
         towers.add(tower);
+        entityByPosition.put(positionKey(tower), tower);
         grid.addSink(tower);
     }
 
     public void registerGenerator(GeneratorEntity generator) {
         generators.add(generator);
+        entityByPosition.put(positionKey(generator), generator);
         grid.addSource(generator);
     }
 
     public void registerPowerStorage(PowerStorageEntity storage) {
         storages.add(storage);
+        entityByPosition.put(positionKey(storage), storage);
         grid.addStorage(storage);
     }
 
     public void registerLink(Conduit conduit, PowerSource source, PowerConsumer destination) {
         ConduitEntity conduitEntity = new ConduitEntity(conduit, source, destination);
-        conduits.add(conduitEntity);
+        if (!conduits.add(conduitEntity)) {
+            return; // duplicate link, already exists
+        }
         grid.addConduit(conduitEntity);
     }
 
@@ -87,14 +100,7 @@ public class GameState {
     }
 
     public Level.Tile getTerrainTile(int x, int y) {
-        x = x / GameAssetManager.TILE_SIZE_PX;
-        y = y / GameAssetManager.TILE_SIZE_PX;
-        for (Level.Tile tile : level.getMap()) {
-            if (tile.getX() == x && tile.getY() == y) {
-                return tile;
-            }
-        }
-        return null;
+        return tileByPosition.get(tileKey(x / GameAssetManager.TILE_SIZE_PX, y / GameAssetManager.TILE_SIZE_PX));
     }
 
     public GameEntity getEntityAt(Vector2 coordinates) {
@@ -102,28 +108,15 @@ public class GameState {
     }
 
     public GameEntity getEntityAt(int x, int y) {
-        x = x / GameAssetManager.TILE_SIZE_PX;
-        y = y / GameAssetManager.TILE_SIZE_PX;
-
-        GameEntity gameEntity = getEntityAt(generators, x, y);
-        if (gameEntity == null) {
-            gameEntity = getEntityAt(storages, x, y);
-        }
-        if (gameEntity == null) {
-            gameEntity = getEntityAt(towers, x, y);
-        }
-        return gameEntity;
+        return entityByPosition.get(tileKey(x / GameAssetManager.TILE_SIZE_PX, y / GameAssetManager.TILE_SIZE_PX));
     }
 
-    private <T extends GameEntity> T getEntityAt(Collection<T> entities, int x, int y) {
-        Vector2 entityPosition;
-        for (T entity : entities) {
-            entityPosition = entity.getPosition();
-            if (entityPosition.x == x && entityPosition.y == y) {
-                return entity;
-            }
-        }
-        return null;
+    private static String positionKey(GameEntity entity) {
+        return tileKey((int) entity.getPosition().x, (int) entity.getPosition().y);
+    }
+
+    private static String tileKey(int x, int y) {
+        return x + "," + y;
     }
 
     public void simulate(float delta) {
