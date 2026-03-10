@@ -126,6 +126,20 @@ Two coordinate spaces: **world coordinates** (pixels, 64px per tile) and **mesh/
 - Use `TestAssetFactory` helper class in `core/src/test/` for creating mocked assets with configurable stats.
 - `GameConstants.TILE_SIZE_PX` provides the tile size constant without importing `GameAssetManager`.
 
+## Feature Development Workflow
+
+New features are developed using a multi-agent pipeline invoked with the `/develop-feature` skill:
+
+1. **`feature-planner`** (Opus) — reads the codebase, writes a spec to `docs/specs/YYYYMMDD-<feature-name>.md`, returns a summary
+2. **Manual gate** — spec is printed inline for review; proceed only after approval
+3. **`implementer`** (Sonnet) — follows the spec, checks off steps as it goes, compiles before finishing
+4. **`test-generator`** (Sonnet) — writes JUnit 5 + Mockito tests for all new pure-logic code
+5. **`code-reviewer`** (Sonnet) — reviews correctness, performance, and convention adherence; loops back to the implementer if blockers are found
+
+Agents are defined in `.claude/agents/`. The skill is defined in `.claude/skills/develop-feature/SKILL.md`.
+
+Feature plans and design documents live in `docs/specs/`. Each spec follows the naming convention `YYYYMMDD-<feature-name>.md` and tracks the feature from design through implementation using checkboxes.
+
 ## Known Issues & Incomplete Areas
 
 - **`TowerEntity.shoot()`** is empty — tower firing plays a sound but deals no damage and has no enemy targeting.
