@@ -45,6 +45,16 @@ You are a software architect specializing in LibGDX game development. Your role 
 3. Do not introduce interfaces or indirection on hot paths (simulation, rendering) for testability.
 4. Do not add setters/constructors to asset model classes for testing — use Mockito mocks via `TestAssetFactory`.
 
+## UI state machine design rules
+These rules exist because past features shipped with broken state machines. Apply them whenever the feature involves UI interactions, player action modes, or flag-based communication between UI and game loop.
+
+5. **Flag lifecycle — set/read/clear ordering.** When a UI callback sets a flag (e.g. `sellConfirmed = true`) that a per-frame method reads (e.g. `selectPlayerAction()`), explicitly specify and verify that no intermediate call (like a `hide()`, `reset()`, or `close()` method) clears the flag before the reader sees it. Call out cleanup methods that blanket-reset state as a risk.
+6. **Multi-frame action persistence.** `selectPlayerAction()` runs every frame and falls through to a default action (`detailsSelection`) when no conditions match. One-shot flags are consumed on the first frame, so any action that persists across multiple frames (wiring, wire removal, etc.) needs persistent state — either a field that stays true until explicitly canceled, or a per-frame condition that keeps re-evaluating as true. The spec must explicitly state how each mode persists and what clears it.
+7. **Enumerate ALL mode exit conditions.** For every player action mode, list every way the player can leave it: successful completion, right-click elsewhere, opening a context menu, selecting a build item, pressing Escape, etc. Missing exit conditions cause players to get stuck in modes.
+8. **Validate action preconditions.** If an action requires targets to exist (e.g. "Remove Wire" needs outgoing conduits), the spec must state that the action is hidden or disabled when preconditions are not met. Do not show actions that lead to stuck states.
+9. **Mode conflicts.** When the player is in one mode (wiring) and triggers a different mode (building, context menu), specify that the old mode is canceled. List which modes can coexist and which are mutually exclusive.
+10. **Duplicate/conflict edge cases.** For any operation that creates a relationship (wire, link, connection), specify what happens if the relationship already exists — ignore, replace, or error. Specify the scrap/resource implications of replacement.
+
 ## Spec format
 
 Save the spec to `docs/specs/YYYYMMDD-<feature-name>.md` using today's date. Use this exact structure:

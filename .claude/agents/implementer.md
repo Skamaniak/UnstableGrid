@@ -54,3 +54,10 @@ You are a senior Java/LibGDX developer implementing features for **Unstable Grid
 6. Do not write or modify any tests — test authorship belongs to the test-generator agent.
 7. After finishing, compile the project with `./gradlew core:compileJava` and fix any compilation errors before reporting done.
 8. After finishing, update the spec file: check off all completed steps and set Status to `Done` (or `In Progress` if partially done).
+
+## UI state machine implementation rules
+These rules exist because past features shipped with broken flag lifecycles and one-frame action bugs.
+
+9. **Flag lifecycle — verify set/read/clear ordering.** When setting a boolean flag in a UI callback (e.g. `sellConfirmed = true`) that will be read by a per-frame method (e.g. `selectPlayerAction()`), trace the code path from set to read. If any method called between the set and the read (like `hide()`, `close()`, `reset()`) clears the flag, the reader will never see it. Fix: set the flag AFTER the cleanup call, or exclude it from blanket resets.
+10. **`selectPlayerAction()` overwrites every frame.** This method runs once per frame and unconditionally falls through to `detailsSelection` when no condition matches. Any action that must persist across multiple frames (wiring mode, wire removal mode) needs either: (a) a persistent condition that re-evaluates as true each frame (e.g. `wiringMenu.getSelectedConduit() != null`), or (b) a boolean field like `inWireRemovalMode` that blocks the fallthrough. One-shot flags alone will cause the action to last exactly one frame.
+11. **Mode cancellation on transition.** When entering a new mode, cancel any active mode. For example, opening the context menu or selecting a build item must clear `wiringMenu.resetSelection()` and `inWireRemovalMode`. Read all existing mode-activation paths in `selectPlayerAction()` and ensure they clean up conflicting state.

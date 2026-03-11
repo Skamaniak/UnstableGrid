@@ -76,16 +76,25 @@ The power grid is a directed graph: **Generators** → **PowerStorages** → **T
 
 ### Player Actions (`action/`)
 
-`PlayerAction` interface with three implementations inside `PlayerActionFactory`:
+`PlayerAction` interface with four implementations inside `PlayerActionFactory`:
 - **`DetailsSelection`** — Default mode. Left-click selects an entity and shows its details. The selected entity reference is kept and details are refreshed every frame via `handleMouseMove`.
 - **`Building`** — Active when a build menu item is selected. Shows valid/invalid placement overlay, places entity on click.
-- **`Wiring`** — Active when a conduit type is selected from the WiringMenu (right-click on a PowerProducer) and that entity is still under the right-click position. Left-clicking a valid `PowerConsumer` within range creates the conduit link and resets the mode.
+- **`Wiring`** — Active when a conduit type is selected from the WiringMenu via ContextMenu. Left-clicking a valid `PowerConsumer` within range creates the conduit link and resets the mode. Persists as long as `wiringMenu.getSelectedConduit()` is non-null.
+- **`WireRemoval`** — Active when "Remove Wire" is clicked in the ContextMenu. Highlights connected consumers; clicking one removes the conduit and refunds scrap. Exits on right-click or successful removal.
 
-`GameScreen.selectPlayerAction()` re-evaluates the active action every frame based on UI state and right-click position. Wiring mode stays active as long as a conduit is selected in `WiringMenu` and the right-click position is on a `PowerProducer`.
+**`selectPlayerAction()` — critical design pattern.** This method runs every frame and derives `pendingPlayerAction` from UI state. It unconditionally falls through to `detailsSelection` at the bottom when no condition matches. This means:
+- **One-shot flags** (set by a UI callback, consumed by `selectPlayerAction`) only survive one frame. Actions that must persist across frames need either a per-frame condition that stays true (e.g. `wiringMenu.getSelectedConduit() != null`) or a guard boolean (e.g. `inWireRemovalMode`) that blocks the fallthrough.
+- **Flag lifecycle matters.** If a UI callback sets a flag then calls a cleanup method (like `hide()`) that blanket-resets all flags, the flag is cleared before `selectPlayerAction` reads it. Always set outbound flags AFTER cleanup calls.
+- **Mode cancellation.** Entering a new mode must cancel conflicting active modes — e.g. opening the ContextMenu calls `wiringMenu.resetSelection()` to cancel wiring; selecting a build item also cancels wiring.
+
+Priority chain in `selectPlayerAction()`: sell confirm → wire removal request → wiring request → wire removal persistence → persistent wiring → build menu → detailsSelection.
 
 ### UI (`ui/`)
 
-Three Scene2D-based menus: `BuildMenu`, `DetailsMenu`, `WiringMenu`. All share the game's `SpriteBatch`. Each has its own `Stage` registered in an `InputMultiplexer`. `PlayerInput` is first in the multiplexer so game clicks are not consumed by UI stages.
+Five Scene2D-based UI elements: `BuildMenu`, `DetailsMenu`, `WiringMenu`, `ContextMenu`, `ScrapHud`. All share the game's `SpriteBatch`. Each has its own `Stage` registered in an `InputMultiplexer`. `PlayerInput` is first in the multiplexer so game clicks are not consumed by UI stages.
+
+- **`ContextMenu`** — Right-click popup on structures. Shows Wire, Remove Wire (if outgoing conduits exist), and Sell buttons. Sell uses two-click confirmation. Sets one-shot flags (`wiringRequested`, `wireRemovalRequested`, `sellConfirmed`) read by `selectPlayerAction()`. Opening a new menu cancels wiring mode via `wiringMenu.resetSelection()`.
+- **`ScrapHud`** — Top-left label showing current scrap count. Polls `gameState.getScrap()` each frame; flashes green on gain, red on spend.
 
 ### Wire Rendering (`ConduitEntity`)
 
@@ -145,4 +154,4 @@ Feature plans and design documents live in `docs/specs/`. Each spec follows the 
 - **`TowerEntity.shoot()`** is empty — tower firing plays a sound but deals no damage and has no enemy targeting.
 - **Enemy simulation** (`simulateEnemies`) is not implemented.
 - **Level loading** is not implemented — `GameScreen` uses `populateGameStateWithDummyData()` instead.
-- **Entity removal** is not exposed in the UI — `removeSource`, `removeStorage`, `removeSink` exist in `PowerGrid` but are never called from gameplay.
+- **Scrap cost for building** — `registerLink()` now charges scrap, but structure placement in `Building.handleClick()` does not yet check or spend scrap.
