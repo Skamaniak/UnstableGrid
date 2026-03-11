@@ -18,7 +18,9 @@ import com.skamaniak.ugfs.input.KeyboardControls;
 import com.skamaniak.ugfs.input.PlayerInput;
 import com.skamaniak.ugfs.simulation.PowerProducer;
 import com.skamaniak.ugfs.ui.BuildMenu;
+import com.skamaniak.ugfs.ui.ContextMenu;
 import com.skamaniak.ugfs.ui.DetailsMenu;
+import com.skamaniak.ugfs.ui.ScrapHud;
 import com.skamaniak.ugfs.ui.WiringMenu;
 import com.skamaniak.ugfs.view.SceneCamera;
 
@@ -36,10 +38,13 @@ public class GameScreen implements Screen {
     private final BuildMenu buildMenu;
     private final DetailsMenu detailsMenu;
     private final WiringMenu wiringMenu;
+    private final ContextMenu contextMenu;
+    private final ScrapHud scrapHud;
 
     // Player Actions
     private final PlayerActionFactory playerActionFactory;
     private PlayerAction pendingPlayerAction;
+    private boolean inWireRemovalMode;
 
     private GameState gameState;
 
@@ -56,9 +61,11 @@ public class GameScreen implements Screen {
 
         this.buildMenu = new BuildMenu(unstableGrid.batch);
         this.detailsMenu = new DetailsMenu(unstableGrid.batch);
-        this.wiringMenu = new WiringMenu(unstableGrid.batch, this::shouldWiringMenuOpen);
+        this.wiringMenu = new WiringMenu(unstableGrid.batch);
+        this.contextMenu = new ContextMenu(unstableGrid.batch, gameState, playerInput, wiringMenu);
+        this.scrapHud = new ScrapHud(unstableGrid.batch, gameState);
 
-        this.playerActionFactory = new PlayerActionFactory(gameState, playerInput, this::showGameObjectDetails, this::buildGameObject, wiringMenu::resetSelection);
+        this.playerActionFactory = new PlayerActionFactory(gameState, playerInput, this::showGameObjectDetails, this::buildGameObject, this::onWireCreated);
         this.pendingPlayerAction = playerActionFactory.detailsSelection();
 
         populateGameStateWithDummyData();
@@ -150,6 +157,8 @@ public class GameScreen implements Screen {
         buildMenu.handleInput();
         detailsMenu.handleInput();
         wiringMenu.handleInput();
+        contextMenu.handleInput();
+        scrapHud.handleInput();
 
         pendingPlayerAction.handleMouseMove(playerInput.getMousePosition());
     }
@@ -180,29 +189,93 @@ public class GameScreen implements Screen {
         buildMenu.draw();
         detailsMenu.draw();
         wiringMenu.draw();
+        contextMenu.draw();
+        scrapHud.draw();
     }
 
     private void selectPlayerAction() {
-        GameAsset buildAsset = buildMenu.getSelectedAsset();
-        Conduit wiringConduit = wiringMenu.getSelectedConduit();
-        GameEntity gameEntity = gameState.getEntityAt(playerInput.getRightClickPosition());
-
-        if (wiringConduit != null && gameEntity instanceof PowerProducer) {
-            pendingPlayerAction = playerActionFactory.wiring(gameEntity, wiringConduit);
-        } else if (buildAsset != null) { //TODO
-            pendingPlayerAction = playerActionFactory.building(buildAsset);
-        } else {
+        // One-shot: sell confirmed
+        if (contextMenu.isSellConfirmed()) {
+            GameEntity entity = contextMenu.getTargetEntity();
+            contextMenu.resetSellConfirmed();
+            if (entity != null) {
+                gameState.sellEntity(entity);
+            }
+            inWireRemovalMode = false;
             pendingPlayerAction = playerActionFactory.detailsSelection();
+            return;
         }
-    }
 
-    private boolean shouldWiringMenuOpen() {
-        GameEntity gameEntity = gameState.getEntityAt(playerInput.getRightClickPosition());
-        return gameEntity instanceof PowerProducer;
+        // One-shot: wire removal requested
+        if (contextMenu.isWireRemovalRequested()) {
+            GameEntity entity = contextMenu.getTargetEntity();
+            contextMenu.resetWireRemovalRequested();
+            if (entity != null) {
+                inWireRemovalMode = true;
+                pendingPlayerAction = playerActionFactory.wireRemoval(entity, this::onWireRemoved);
+            }
+            return;
+        }
+
+        // One-shot: wiring conduit selected via context menu
+        if (contextMenu.isWiringRequested()) {
+            Conduit selectedConduit = wiringMenu.getSelectedConduit();
+            if (selectedConduit != null) {
+                GameEntity entity = contextMenu.getTargetEntity();
+                if (entity instanceof PowerProducer) {
+                    contextMenu.resetWiringRequested();
+                    inWireRemovalMode = false;
+                    pendingPlayerAction = playerActionFactory.wiring(entity, selectedConduit);
+                    return;
+                }
+            }
+            // Conduit not yet selected in WiringMenu — keep waiting
+            return;
+        }
+
+        // Persist wire removal mode until right-click exits it
+        if (inWireRemovalMode) {
+            if (playerInput.justClicked(Input.Buttons.RIGHT)) {
+                inWireRemovalMode = false;
+            } else {
+                return;
+            }
+        }
+
+        // Build mode takes priority over persistent wiring
+        GameAsset buildAsset = buildMenu.getSelectedAsset();
+        if (buildAsset != null) {
+            wiringMenu.resetSelection();
+            pendingPlayerAction = playerActionFactory.building(buildAsset);
+            return;
+        }
+
+        // Persistent wiring: conduit still selected from WiringMenu
+        Conduit wiringConduit = wiringMenu.getSelectedConduit();
+        if (wiringConduit != null) {
+            GameEntity wiringSource = contextMenu.getTargetEntity();
+            if (wiringSource instanceof PowerProducer) {
+                pendingPlayerAction = playerActionFactory.wiring(wiringSource, wiringConduit);
+                return;
+            }
+        }
+
+        // Default
+        pendingPlayerAction = playerActionFactory.detailsSelection();
     }
 
     private void showGameObjectDetails(String details) {
         detailsMenu.showDetails(details);
+    }
+
+    private void onWireCreated() {
+        wiringMenu.resetSelection();
+        contextMenu.resetWiringRequested();
+    }
+
+    private void onWireRemoved() {
+        inWireRemovalMode = false;
+        pendingPlayerAction = playerActionFactory.detailsSelection();
     }
 
     private void buildGameObject(Vector2 position, GameAsset asset) {
@@ -218,15 +291,19 @@ public class GameScreen implements Screen {
         buildMenu.resize(width, height);
         detailsMenu.resize(width, height);
         wiringMenu.resize(width, height);
+        contextMenu.resize(width, height);
+        scrapHud.resize(width, height);
     }
 
     @Override
     public void show() {
         InputMultiplexer multiplexer = new InputMultiplexer();
         multiplexer.addProcessor(playerInput);
+        multiplexer.addProcessor(contextMenu.getStage());
         multiplexer.addProcessor(buildMenu.getStage());
         multiplexer.addProcessor(detailsMenu.getStage());
         multiplexer.addProcessor(wiringMenu.getStage());
+        multiplexer.addProcessor(scrapHud.getStage());
         Gdx.input.setInputProcessor(multiplexer);
     }
 
@@ -250,5 +327,7 @@ public class GameScreen implements Screen {
         buildMenu.dispose();
         detailsMenu.dispose();
         wiringMenu.dispose();
+        contextMenu.dispose();
+        scrapHud.dispose();
     }
 }

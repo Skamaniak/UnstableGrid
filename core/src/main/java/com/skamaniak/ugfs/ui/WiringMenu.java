@@ -12,26 +12,23 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.skamaniak.ugfs.asset.GameAssetManager;
 import com.skamaniak.ugfs.asset.model.Conduit;
 
-import java.util.function.Supplier;
-
 public class WiringMenu {
     private final Stage stage;
     private final Viewport viewport;
-    private final Supplier<Boolean> openMenuTest;
+    private Table menu;
     private Conduit selectedConduit;
 
-    public WiringMenu(SpriteBatch batch, Supplier<Boolean> openMenuTest) {
+    public WiringMenu(SpriteBatch batch) {
         this.viewport = new ScreenViewport();
         this.stage = new Stage(viewport, batch);
-        this.openMenuTest = openMenuTest;
-        Table menu = createMenu();
-        setupInputListener(menu);
+        menu = createMenu();
         stage.addActor(menu);
     }
 
     private Table createMenu() {
         Table menuTable = new Table();
         menuTable.setVisible(false);
+        menuTable.defaults().minWidth(180).fillX();
 
         for (Conduit conduit : GameAssetManager.INSTANCE.getConduits()) {
             TextButton button = new TextButton(conduit.getName(), GameAssetManager.INSTANCE.getSkin());
@@ -48,24 +45,14 @@ public class WiringMenu {
             });
             menuTable.add(button).row();
         }
+        menuTable.pack();
         return menuTable;
     }
 
-    private void setupInputListener(Table menuTable) {
-        stage.addListener(new InputListener() {
-            @Override
-            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                if (button == Input.Buttons.RIGHT && openMenuTest.get()) {
-                    menuTable.setPosition(x, y);
-                    menuTable.setVisible(true);
-                    resetSelection();
-                } else if (menuTable.isVisible()) {
-                    menuTable.setVisible(false);
-                    resetSelection();
-                }
-                return false;
-            }
-        });
+    public void show(float x, float y) {
+        resetSelection();
+        menu.setPosition(x, y - menu.getHeight());
+        menu.setVisible(true);
     }
 
     public void handleInput() {
