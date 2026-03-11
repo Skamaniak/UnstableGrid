@@ -93,6 +93,11 @@ public class TowerEntity extends GameEntity implements PowerConsumer {
     }
 
     @Override
+    public int getScrapCost() {
+        return towerLevel().getScrapCost();
+    }
+
+    @Override
     public String getDetails() {
         Tower.Level level = towerLevel();
         int maxPower = level.getPowerStorage();

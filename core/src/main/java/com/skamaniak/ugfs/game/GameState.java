@@ -13,8 +13,10 @@ import com.skamaniak.ugfs.simulation.PowerConsumer;
 import com.skamaniak.ugfs.simulation.PowerGrid;
 import com.skamaniak.ugfs.simulation.PowerSource;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -76,17 +78,122 @@ public class GameState {
     }
 
     public void registerLink(Conduit conduit, PowerSource source, PowerConsumer destination) {
-        ConduitEntity conduitEntity = new ConduitEntity(conduit, source, destination);
-        if (!conduits.add(conduitEntity)) {
-            return; // duplicate link, already exists
+        // Replace existing wire between same endpoints (refund old, charge difference)
+        ConduitEntity existing = findConduit(source, destination);
+        if (existing != null) {
+            if (existing.conduit.equals(conduit)) {
+                return; // exact same wire type, nothing to do
+            }
+            sellConduit(existing);
         }
+
+        ConduitEntity conduitEntity = new ConduitEntity(conduit, source, destination);
+        conduits.add(conduitEntity);
         grid.addConduit(conduitEntity);
+        spendScrap(conduit.getScrapCost());
+    }
+
+    public int getScrap() {
+        return scrap;
+    }
+
+    public void addScrap(int amount) {
+        scrap += amount;
+    }
+
+    public boolean spendScrap(int amount) {
+        if (scrap < amount) {
+            return false;
+        }
+        scrap -= amount;
+        return true;
     }
 
     public void sellConduit(ConduitEntity conduit) {
         conduits.remove(conduit);
         grid.removeConduit(conduit);
-        // TODO add scrap back
+        addScrap(conduit.conduit.getScrapCost());
+    }
+
+    public void sellGenerator(GeneratorEntity generator) {
+        List<ConduitEntity> connected = findConnectedConduits(generator);
+        for (ConduitEntity conduit : connected) {
+            sellConduit(conduit);
+        }
+        generators.remove(generator);
+        entityByPosition.remove(positionKey(generator));
+        grid.removeSource(generator);
+        addScrap(generator.getScrapCost());
+    }
+
+    public void sellStorage(PowerStorageEntity storage) {
+        List<ConduitEntity> connected = findConnectedConduits(storage);
+        for (ConduitEntity conduit : connected) {
+            sellConduit(conduit);
+        }
+        storages.remove(storage);
+        entityByPosition.remove(positionKey(storage));
+        grid.removeStorage(storage);
+        addScrap(storage.getScrapCost());
+    }
+
+    public void sellTower(TowerEntity tower) {
+        List<ConduitEntity> connected = findConnectedConduits(tower);
+        for (ConduitEntity conduit : connected) {
+            sellConduit(conduit);
+        }
+        towers.remove(tower);
+        entityByPosition.remove(positionKey(tower));
+        grid.removeSink(tower);
+        addScrap(tower.getScrapCost());
+    }
+
+    public void sellEntity(GameEntity entity) {
+        if (entity instanceof TowerEntity) {
+            sellTower((TowerEntity) entity);
+        } else if (entity instanceof PowerStorageEntity) {
+            sellStorage((PowerStorageEntity) entity);
+        } else if (entity instanceof GeneratorEntity) {
+            sellGenerator((GeneratorEntity) entity);
+        } else {
+            throw new RuntimeException("Unknown entity " + entity);
+        }
+    }
+
+    public ConduitEntity findConduit(PowerSource from, PowerConsumer to) {
+        for (ConduitEntity conduit : conduits) {
+            if (conduit.from == from && conduit.to == to) {
+                return conduit;
+            }
+        }
+        return null;
+    }
+
+    public boolean hasOutgoingConduits(PowerSource source) {
+        for (ConduitEntity conduit : conduits) {
+            if (conduit.from == source) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public List<ConduitEntity> findConnectedConduits(Object entity) {
+        List<ConduitEntity> result = new ArrayList<>();
+        for (ConduitEntity conduit : conduits) {
+            if (conduit.from == entity || conduit.to == entity) {
+                result.add(conduit);
+            }
+        }
+        return result;
+    }
+
+    public int computeSellValue(GameEntity entity) {
+        int total = entity.getScrapCost();
+        for (ConduitEntity conduit : findConnectedConduits(entity)) {
+            total += conduit.conduit.getScrapCost();
+        }
+        return total;
     }
 
     public void readInputs() {

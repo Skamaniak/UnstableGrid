@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
+import com.skamaniak.ugfs.GameConstants;
 import com.skamaniak.ugfs.NavigationUtils;
 import com.skamaniak.ugfs.asset.GameAssetManager;
 import com.skamaniak.ugfs.asset.model.Conduit;
@@ -11,11 +12,13 @@ import com.skamaniak.ugfs.asset.model.GameAsset;
 import com.skamaniak.ugfs.asset.model.Level;
 import com.skamaniak.ugfs.asset.model.Terrain;
 import com.skamaniak.ugfs.game.GameState;
+import com.skamaniak.ugfs.game.entity.ConduitEntity;
 import com.skamaniak.ugfs.game.entity.GameEntity;
 import com.skamaniak.ugfs.input.PlayerInput;
 import com.skamaniak.ugfs.simulation.PowerConsumer;
 import com.skamaniak.ugfs.simulation.PowerSource;
 
+import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -24,8 +27,12 @@ public class PlayerActionFactory {
     private final Wiring wiring;
     private final Building building;
     private final DetailsSelection detailsSelection;
+    private final GameState gameState;
+    private final PlayerInput input;
 
     public PlayerActionFactory(GameState gameState, PlayerInput input, Consumer<String> detailsAction, BiConsumer<Vector2, GameAsset> buildAction, Runnable onWireCreated) {
+        this.gameState = gameState;
+        this.input = input;
         wiring = new Wiring(gameState, input, onWireCreated);
         building = new Building(gameState, buildAction);
         detailsSelection = new DetailsSelection(gameState, detailsAction);
@@ -46,6 +53,10 @@ public class PlayerActionFactory {
     public DetailsSelection detailsSelection() {
         // TODO init details selection
         return detailsSelection;
+    }
+
+    public WireRemoval wireRemoval(GameEntity source, Runnable onWireRemoved) {
+        return new WireRemoval(gameState, input, source, onWireRemoved);
     }
 
     private static class Wiring implements PlayerAction {
@@ -212,6 +223,78 @@ public class PlayerActionFactory {
         @Override
         public void drawShapes(ShapeRenderer shapeRenderer) {
 
+        }
+    }
+
+    private static class WireRemoval implements PlayerAction {
+        private static final Color HIGHLIGHT_COLOR = new Color(1f, 0.5f, 0f, 0.5f);
+        private static final Color PREVIEW_COLOR = new Color(1f, 0f, 0f, 0.75f);
+
+        private final GameState gameState;
+        private final PlayerInput input;
+        private final GameEntity source;
+        private final Runnable onWireRemoved;
+        private final List<ConduitEntity> connectedConduits;
+        private GameEntity hoveredEntity;
+
+        public WireRemoval(GameState gameState, PlayerInput input, GameEntity source, Runnable onWireRemoved) {
+            this.gameState = gameState;
+            this.input = input;
+            this.source = source;
+            this.onWireRemoved = onWireRemoved;
+            this.connectedConduits = gameState.findConnectedConduits(source);
+        }
+
+        @Override
+        public void handleClick(Vector2 mousePosition) {
+            GameEntity target = gameState.getEntityAt(mousePosition);
+            if (target == null || !(target instanceof PowerConsumer)) {
+                return;
+            }
+            ConduitEntity conduit = gameState.findConduit((PowerSource) source, (PowerConsumer) target);
+            if (conduit != null) {
+                gameState.sellConduit(conduit);
+                onWireRemoved.run();
+            }
+        }
+
+        @Override
+        public void handleMouseMove(Vector2 mousePosition) {
+            hoveredEntity = gameState.getEntityAt(mousePosition);
+        }
+
+        @Override
+        public void drawTextures(SpriteBatch batch) {
+        }
+
+        @Override
+        public void drawShapes(ShapeRenderer shapeRenderer) {
+            int offset = GameConstants.TILE_SIZE_PX / 2;
+            for (ConduitEntity conduit : connectedConduits) {
+                if (conduit.from != source) {
+                    continue;
+                }
+                if (!(conduit.to instanceof GameEntity)) {
+                    continue;
+                }
+                GameEntity consumer = (GameEntity) conduit.to;
+                float cx = consumer.getPosition().x * GameConstants.TILE_SIZE_PX + offset;
+                float cy = consumer.getPosition().y * GameConstants.TILE_SIZE_PX + offset;
+                shapeRenderer.setColor(HIGHLIGHT_COLOR);
+                shapeRenderer.circle(cx, cy, offset);
+            }
+
+            if (hoveredEntity != null && hoveredEntity != source && hoveredEntity instanceof PowerConsumer) {
+                ConduitEntity hovered = gameState.findConduit((PowerSource) source, (PowerConsumer) hoveredEntity);
+                if (hovered != null && hovered.to instanceof GameEntity) {
+                    float sx = source.getPosition().x * GameConstants.TILE_SIZE_PX + offset;
+                    float sy = source.getPosition().y * GameConstants.TILE_SIZE_PX + offset;
+                    float tx = ((GameEntity) hovered.to).getPosition().x * GameConstants.TILE_SIZE_PX + offset;
+                    float ty = ((GameEntity) hovered.to).getPosition().y * GameConstants.TILE_SIZE_PX + offset;
+                    shapeRenderer.setColor(PREVIEW_COLOR);
+                    shapeRenderer.rectLine(sx, sy, tx, ty, 4f);
+                }
+            }
         }
     }
 }

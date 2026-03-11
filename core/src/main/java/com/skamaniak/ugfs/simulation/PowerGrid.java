@@ -31,7 +31,7 @@ public class PowerGrid {
             if (conduit.from == source) toRemove.add(conduit);
         }
         for (ConduitEntity conduit : toRemove) {
-            source.removeTo(conduit.to);
+            conduit.unregister();
             removeConduit(conduit);
         }
         return sources.remove(source);
@@ -46,6 +46,14 @@ public class PowerGrid {
     }
 
     public boolean removeStorage(PowerStorageEntity storage) {
+        List<ConduitEntity> toRemove = new ArrayList<>();
+        for (ConduitEntity conduit : conduits) {
+            if (conduit.from == storage || conduit.to == storage) toRemove.add(conduit);
+        }
+        for (ConduitEntity conduit : toRemove) {
+            conduit.unregister();
+            conduits.remove(conduit);
+        }
         return storages.remove(storage);
     }
 
@@ -63,7 +71,7 @@ public class PowerGrid {
             if (conduit.to == sink) toRemove.add(conduit);
         }
         for (ConduitEntity conduit : toRemove) {
-            conduit.from.removeTo(sink);
+            conduit.unregister();
             removeConduit(conduit);
         }
         return sinks.remove(sink);

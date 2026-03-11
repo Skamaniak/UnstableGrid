@@ -124,6 +124,11 @@ public class PowerStorageEntity extends GameEntity implements PowerConsumer, Pow
     }
 
     @Override
+    public int getScrapCost() {
+        return powerStorageLevel().getScrapCost();
+    }
+
+    @Override
     public String getDetails() {
         int maxPower = powerStorageLevel().getPowerStorage();
         return storage.getName()

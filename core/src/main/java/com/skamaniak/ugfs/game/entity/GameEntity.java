@@ -25,4 +25,6 @@ public abstract class GameEntity implements Drawable {
     }
 
     public abstract String getDetails();
+
+    public abstract int getScrapCost();
 }

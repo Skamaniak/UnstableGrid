@@ -82,6 +82,11 @@ public class GeneratorEntity extends GameEntity implements PowerProducer {
     }
 
     @Override
+    public int getScrapCost() {
+        return generatorLevel().getScrapCost();
+    }
+
+    @Override
     public String getDetails() {
         int maxPower = generatorLevel().getPowerStorage();
         return generator.getName()
