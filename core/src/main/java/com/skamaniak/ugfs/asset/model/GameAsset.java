@@ -28,4 +28,8 @@ public class GameAsset {
     public List<TerrainType> getBuildableOn() {
         return buildableOn;
     }
+
+    public int getBuildCost() {
+        return 0;
+    }
 }

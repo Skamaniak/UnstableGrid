@@ -34,6 +34,11 @@ public class Tower extends GameAsset {
         return levels;
     }
 
+    @Override
+    public int getBuildCost() {
+        return levels.get(0).getScrapCost();
+    }
+
     public static class Level {
         private int level;
         private int powerStorage;

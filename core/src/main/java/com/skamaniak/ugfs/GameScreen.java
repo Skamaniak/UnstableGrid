@@ -4,9 +4,11 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.skamaniak.ugfs.action.PlayerAction;
 import com.skamaniak.ugfs.action.PlayerActionFactory;
@@ -59,10 +61,10 @@ public class GameScreen implements Screen {
 
         this.playerInput = new PlayerInput(viewport::unproject);
 
-        this.buildMenu = new BuildMenu(unstableGrid.batch);
+        this.buildMenu = new BuildMenu(unstableGrid.batch, gameState);
         this.detailsMenu = new DetailsMenu(unstableGrid.batch);
-        this.wiringMenu = new WiringMenu(unstableGrid.batch);
-        this.contextMenu = new ContextMenu(unstableGrid.batch, gameState, playerInput, wiringMenu);
+        this.wiringMenu = new WiringMenu(unstableGrid.batch, gameState);
+        this.contextMenu = new ContextMenu(unstableGrid.batch, gameState, playerInput, wiringMenu, buildMenu);
         this.scrapHud = new ScrapHud(unstableGrid.batch, gameState);
 
         this.playerActionFactory = new PlayerActionFactory(gameState, playerInput, this::showGameObjectDetails, this::buildGameObject, this::onWireCreated);
@@ -107,14 +109,14 @@ public class GameScreen implements Screen {
 
         Conduit conduitCopper = GameAssetManager.INSTANCE.getConduit("conduit.copper-wire");
         Conduit conduitAcsr = GameAssetManager.INSTANCE.getConduit("conduit.acsr");
-        gameState.registerLink(conduitCopper, generatorSolarPanel1, towerEntity2);
-        gameState.registerLink(conduitCopper, generatorSolarPanel2, storageEntity);
-        gameState.registerLink(conduitCopper, generatorSolarPanel3, storageEntity);
-        gameState.registerLink(conduitCopper, generatorSolarPanel4, storageEntity);
-        gameState.registerLink(conduitCopper, generatorSolarPanel4, storageEntity2);
-        gameState.registerLink(conduitAcsr, waterGenerator1, storageEntity2);
-        gameState.registerLink(conduitCopper, storageEntity2, towerEntity);
-        gameState.registerLink(conduitCopper, storageEntity, towerEntity2);
+        gameState.registerLinkFree(conduitCopper, generatorSolarPanel1, towerEntity2);
+        gameState.registerLinkFree(conduitCopper, generatorSolarPanel2, storageEntity);
+        gameState.registerLinkFree(conduitCopper, generatorSolarPanel3, storageEntity);
+        gameState.registerLinkFree(conduitCopper, generatorSolarPanel4, storageEntity);
+        gameState.registerLinkFree(conduitCopper, generatorSolarPanel4, storageEntity2);
+        gameState.registerLinkFree(conduitAcsr, waterGenerator1, storageEntity2);
+        gameState.registerLinkFree(conduitCopper, storageEntity2, towerEntity);
+        gameState.registerLinkFree(conduitCopper, storageEntity, towerEntity2);
     }
 
     @Override
@@ -149,7 +151,7 @@ public class GameScreen implements Screen {
             System.out.println(Gdx.graphics.getFramesPerSecond());
         }
 
-        if (playerInput.justClicked(Input.Buttons.LEFT)) {
+        if (playerInput.justClicked(Input.Buttons.LEFT) && !isClickOnUI()) {
             pendingPlayerAction.handleClick(playerInput.getLeftClickPosition());
         }
 
@@ -172,6 +174,7 @@ public class GameScreen implements Screen {
         viewport.apply();
 
         game.batch.setProjectionMatrix(viewport.getCamera().combined);
+        game.batch.setColor(Color.WHITE);
         game.batch.begin();
         gameState.drawTextures(delta);
         pendingPlayerAction.drawTextures(game.batch);
@@ -229,8 +232,12 @@ public class GameScreen implements Screen {
                     return;
                 }
             }
-            // Conduit not yet selected in WiringMenu — keep waiting
-            return;
+            // Conduit not yet selected — keep waiting only if WiringMenu is still open
+            if (wiringMenu.isVisible()) {
+                return;
+            }
+            // WiringMenu was dismissed without selecting — cancel wiring request
+            contextMenu.resetWiringRequested();
         }
 
         // Persist wire removal mode until right-click exits it
@@ -253,10 +260,14 @@ public class GameScreen implements Screen {
         // Persistent wiring: conduit still selected from WiringMenu
         Conduit wiringConduit = wiringMenu.getSelectedConduit();
         if (wiringConduit != null) {
-            GameEntity wiringSource = contextMenu.getTargetEntity();
-            if (wiringSource instanceof PowerProducer) {
-                pendingPlayerAction = playerActionFactory.wiring(wiringSource, wiringConduit);
-                return;
+            if (playerInput.justClicked(Input.Buttons.RIGHT)) {
+                wiringMenu.resetSelection();
+            } else {
+                GameEntity wiringSource = contextMenu.getTargetEntity();
+                if (wiringSource instanceof PowerProducer) {
+                    pendingPlayerAction = playerActionFactory.wiring(wiringSource, wiringConduit);
+                    return;
+                }
             }
         }
 
@@ -278,11 +289,28 @@ public class GameScreen implements Screen {
         pendingPlayerAction = playerActionFactory.detailsSelection();
     }
 
+    private boolean isClickOnUI() {
+        float screenX = Gdx.input.getX();
+        float screenY = Gdx.input.getY();
+        return hitTestStage(buildMenu.getStage(), screenX, screenY)
+            || hitTestStage(contextMenu.getStage(), screenX, screenY)
+            || hitTestStage(wiringMenu.getStage(), screenX, screenY);
+    }
+
+    private boolean hitTestStage(Stage stage, float screenX, float screenY) {
+        Vector2 stageCoords = stage.screenToStageCoordinates(new Vector2(screenX, screenY));
+        return stage.hit(stageCoords.x, stageCoords.y, true) != null;
+    }
+
     private void buildGameObject(Vector2 position, GameAsset asset) {
-        buildMenu.resetSelection();
+        if (!gameState.spendScrap(asset.getBuildCost())) {
+            buildMenu.resetSelection();
+            return;
+        }
         Vector2 entityPosition = NavigationUtils.meshVectorFromWorldVector(position);
         GameEntity newEntity = gameEntityFactory.createEntity(entityPosition, asset);
         gameState.registerEntity(newEntity);
+        buildMenu.resetSelection();
     }
 
     @Override

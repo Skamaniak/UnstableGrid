@@ -23,6 +23,7 @@ public class ContextMenu {
     private final PlayerInput playerInput;
     private final Table menuTable;
     private final WiringMenu wiringMenu;
+    private final BuildMenu buildMenu;
 
     private GameEntity targetEntity;
     private boolean wiringRequested;
@@ -32,10 +33,11 @@ public class ContextMenu {
 
     private TextButton sellButton;
 
-    public ContextMenu(SpriteBatch batch, GameState gameState, PlayerInput playerInput, WiringMenu wiringMenu) {
+    public ContextMenu(SpriteBatch batch, GameState gameState, PlayerInput playerInput, WiringMenu wiringMenu, BuildMenu buildMenu) {
         this.gameState = gameState;
         this.playerInput = playerInput;
         this.wiringMenu = wiringMenu;
+        this.buildMenu = buildMenu;
         this.viewport = new ScreenViewport();
         this.stage = new Stage(viewport, batch);
 
@@ -74,7 +76,8 @@ public class ContextMenu {
         wireRemovalRequested = false;
         sellArmed = false;
         sellConfirmed = false;
-        wiringMenu.resetSelection();
+        wiringMenu.hide();
+        buildMenu.resetSelection();
 
         menuTable.clear();
         menuTable.defaults().minWidth(180).fillX();

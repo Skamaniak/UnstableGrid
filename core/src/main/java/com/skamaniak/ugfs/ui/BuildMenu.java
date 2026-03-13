@@ -1,5 +1,6 @@
 package com.skamaniak.ugfs.ui;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -12,19 +13,23 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.skamaniak.ugfs.asset.GameAssetManager;
 import com.skamaniak.ugfs.asset.model.GameAsset;
+import com.skamaniak.ugfs.game.GameState;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 
 public class BuildMenu {
     private final Stage stage;
     private final Viewport viewport;
-    private final Collection<Button> buildButtons = new HashSet<>();
+    private final Map<Button, GameAsset> buildButtonAssets = new HashMap<>();
     private final Label description;
+    private final GameState gameState;
 
     private GameAsset selectedAsset;
 
-    public BuildMenu(SpriteBatch batch) {
+    public BuildMenu(SpriteBatch batch, GameState gameState) {
+        this.gameState = gameState;
         this.viewport = new ScreenViewport();
         this.stage = new Stage(this.viewport, batch);
         Skin skin = GameAssetManager.INSTANCE.getSkin();
@@ -105,10 +110,13 @@ public class BuildMenu {
         Table menu = new Table().top().left();
 
         for (T gameAsset : gameAssets) {
-            Button button = new TextButton(gameAsset.getName(), GameAssetManager.INSTANCE.getSkin(), "toggle");
+            Button button = new TextButton(gameAsset.getName() + " - " + gameAsset.getBuildCost(), GameAssetManager.INSTANCE.getSkin(), "toggle");
             button.addListener(new ClickListener(){
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
+                    if (gameState.getScrap() < gameAsset.getBuildCost()) {
+                        return;
+                    }
                     resetSelection();
                     button.setChecked(true);
                     description.setText(gameAsset.getDescription());
@@ -117,13 +125,13 @@ public class BuildMenu {
             });
             menu.add(button).expandX().fillX().top();
             menu.row();
-            buildButtons.add(button);
+            buildButtonAssets.put(button, gameAsset);
         }
         return menu;
     }
 
     public void resetSelection() {
-        for (Button button : buildButtons) {
+        for (Button button : buildButtonAssets.keySet()) {
             button.setChecked(false);
         }
         description.setText("");
@@ -145,6 +153,13 @@ public class BuildMenu {
 
     public void handleInput() {
         stage.act();
+        for (Map.Entry<Button, GameAsset> entry : buildButtonAssets.entrySet()) {
+            if (gameState.getScrap() < entry.getValue().getBuildCost()) {
+                entry.getKey().setColor(0.8f, 0.3f, 0.3f, 1f);
+            } else {
+                entry.getKey().setColor(Color.WHITE);
+            }
+        }
     }
 
     public void resize(int width, int height) {

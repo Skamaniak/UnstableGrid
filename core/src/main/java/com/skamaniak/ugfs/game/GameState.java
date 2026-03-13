@@ -77,6 +77,20 @@ public class GameState {
         grid.addStorage(storage);
     }
 
+    public void registerLinkFree(Conduit conduit, PowerSource source, PowerConsumer destination) {
+        ConduitEntity existing = findConduit(source, destination);
+        if (existing != null) {
+            if (existing.conduit.equals(conduit)) {
+                return;
+            }
+            conduits.remove(existing);
+            grid.removeConduit(existing);
+        }
+        ConduitEntity conduitEntity = new ConduitEntity(conduit, source, destination);
+        conduits.add(conduitEntity);
+        grid.addConduit(conduitEntity);
+    }
+
     public void registerLink(Conduit conduit, PowerSource source, PowerConsumer destination) {
         // Replace existing wire between same endpoints (refund old, charge difference)
         ConduitEntity existing = findConduit(source, destination);
@@ -87,10 +101,12 @@ public class GameState {
             sellConduit(existing);
         }
 
+        if (!spendScrap(conduit.getScrapCost())) {
+            return;
+        }
         ConduitEntity conduitEntity = new ConduitEntity(conduit, source, destination);
         conduits.add(conduitEntity);
         grid.addConduit(conduitEntity);
-        spendScrap(conduit.getScrapCost());
     }
 
     public int getScrap() {

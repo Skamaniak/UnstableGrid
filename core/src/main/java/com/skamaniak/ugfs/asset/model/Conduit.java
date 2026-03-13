@@ -24,6 +24,11 @@ public class Conduit extends GameAsset {
         return scrapCost;
     }
 
+    @Override
+    public int getBuildCost() {
+        return scrapCost;
+    }
+
     public String getTexture() {
         return texture;
     }
