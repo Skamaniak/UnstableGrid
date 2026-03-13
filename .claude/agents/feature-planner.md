@@ -50,10 +50,13 @@ These rules exist because past features shipped with broken state machines. Appl
 
 5. **Flag lifecycle — set/read/clear ordering.** When a UI callback sets a flag (e.g. `sellConfirmed = true`) that a per-frame method reads (e.g. `selectPlayerAction()`), explicitly specify and verify that no intermediate call (like a `hide()`, `reset()`, or `close()` method) clears the flag before the reader sees it. Call out cleanup methods that blanket-reset state as a risk.
 6. **Multi-frame action persistence.** `selectPlayerAction()` runs every frame and falls through to a default action (`detailsSelection`) when no conditions match. One-shot flags are consumed on the first frame, so any action that persists across multiple frames (wiring, wire removal, etc.) needs persistent state — either a field that stays true until explicitly canceled, or a per-frame condition that keeps re-evaluating as true. The spec must explicitly state how each mode persists and what clears it.
-7. **Enumerate ALL mode exit conditions.** For every player action mode, list every way the player can leave it: successful completion, right-click elsewhere, opening a context menu, selecting a build item, pressing Escape, etc. Missing exit conditions cause players to get stuck in modes.
+7. **Enumerate ALL mode exit conditions.** For every player action mode, list every way the player can leave it: successful completion, right-click elsewhere, opening a context menu, selecting a build item, pressing Escape, etc. Missing exit conditions cause players to get stuck in modes. **Hard convention: right-click always cancels any persistent mode** (wiring, wire removal, etc.). Any new persistent mode must include a right-click exit path in its spec.
 8. **Validate action preconditions.** If an action requires targets to exist (e.g. "Remove Wire" needs outgoing conduits), the spec must state that the action is hidden or disabled when preconditions are not met. Do not show actions that lead to stuck states.
 9. **Mode conflicts.** When the player is in one mode (wiring) and triggers a different mode (building, context menu), specify that the old mode is canceled. List which modes can coexist and which are mutually exclusive.
 10. **Duplicate/conflict edge cases.** For any operation that creates a relationship (wire, link, connection), specify what happens if the relationship already exists — ignore, replace, or error. Specify the scrap/resource implications of replacement.
+11. **One-shot vs persistent actions.** Explicitly state whether a player action is one-shot (completes after one use, e.g. building places one structure then exits build mode) or persistent (stays active until canceled, e.g. wire removal). One-shot actions must reset UI state after completion. Persistent actions must have right-click cancel (rule 7).
+12. **Stuck-state prevention.** If a UI flow opens a menu where all options may be disabled/unaffordable, specify what happens. The player must never get trapped — either prevent opening the menu, or ensure dismissing it cleanly resets all state (including one-shot flags that would otherwise block `selectPlayerAction()` fallthrough).
+13. **New UI elements and popups.** If the feature adds a new Stage-based UI element, note that it must be registered in `isClickOnUI()`. If it adds a popup menu, note that it needs click-outside dismiss. The code reviewer will verify the implementation details of these conventions.
 
 ## Spec format
 
@@ -65,6 +68,9 @@ Save the spec to `docs/specs/YYYYMMDD-<feature-name>.md` using today's date. Use
 **Date:** YYYY-MM-DD
 **Status:** Draft
 **Author:** feature-planner
+
+## Requirements
+Paste the full requirements brief provided by the caller here verbatim. This section preserves the original intent and constraints so that reviewers and implementers can trace design decisions back to requirements.
 
 ## Motivation
 Why this feature is needed and what problem it solves.
@@ -83,7 +89,15 @@ How it fits into the existing architecture. Key decisions made and why.
 - [ ] Step 2
 
 ## Testing Plan
-What can be unit tested (and how), and what requires LibGDX (untestable).
+
+### Unit testable (pure logic)
+What can be unit tested and how.
+
+### Requires LibGDX (not unit tested)
+What requires LibGDX runtime and cannot be unit tested.
+
+### Manual test scenarios
+Numbered list of concrete, step-by-step manual test scenarios the developer should walk through after the feature is implemented. Each scenario should describe exact player actions and expected outcomes. Cover the happy path, edge cases, and error/rejection cases.
 
 ## Risks & Trade-offs
 Anything the implementer should watch out for.

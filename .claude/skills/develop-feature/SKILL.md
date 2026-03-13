@@ -11,7 +11,7 @@ You are orchestrating a full feature development pipeline for Unstable Grid. The
 
 Before any planning begins, your job is to ensure the feature requirements are clear, complete, and unambiguous enough that the planner can produce a spec with high confidence. Act as a requirements designer — interview the user, surface gaps, and refine until the requirements are solid.
 
-### Process
+### ProcessAdd
 
 1. **Analyze** the user's initial feature description. Consider:
    - Is the scope clear? Could two reasonable people interpret it differently?
@@ -73,6 +73,6 @@ Invoke the `test-generator` subagent, passing it the spec file path and the list
 
 Invoke the `code-reviewer` subagent, passing it the spec file path and the list of changed files. Wait for it to finish. Present the full review output to the user.
 
-If the verdict is **Approved** or **Approved with warnings**, the workflow is complete. Summarise what was built and the spec file path.
+If the verdict is **Approved** or **Approved with warnings**, the workflow is complete. Summarise what was built and the spec file path. Then read the spec file, extract the **Manual test scenarios** section, and print it to the console so the user can walk through manual verification immediately.
 
 If the verdict is **Needs changes**, extract the list of Blockers from the review and pass them to the `implementer` subagent as a fix list (along with the spec file path). Once the implementer finishes, invoke the `test-generator` again for any files it touched, then re-run the `code-reviewer`. Repeat this loop until the verdict is no longer **Needs changes**. After two failed review cycles, stop and present the outstanding blockers to the user for manual resolution rather than looping again.

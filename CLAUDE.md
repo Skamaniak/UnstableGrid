@@ -41,6 +41,8 @@ Tests use JUnit 5 + Mockito. Test sources are in `core/src/test/`.
 
 Each frame follows this sequence: `readInputs()` → `updateCamera()` → `gameState.simulate(delta)` → `selectPlayerAction()` → `draw(delta)`. Drawing uses two passes: `SpriteBatch` for textures, then `ShapeRenderer` for shapes (with alpha blending).
 
+**SpriteBatch color reset:** `draw()` calls `game.batch.setColor(Color.WHITE)` before `batch.begin()` every frame. This is mandatory because the shared `SpriteBatch` does NOT reset its color between `begin()`/`end()` calls or between frames. Without this, any UI code that tints actors (e.g. red disabled buttons) will poison the game world rendering on the next frame.
+
 ### Core Package Layout (`com.skamaniak.ugfs`)
 
 - **`UnstableGrid`** — `Game` subclass, holds shared `SpriteBatch`, `ShapeRenderer`, `BitmapFont`. Starts on `MainMenuScreen`, transitions to `GameScreen`.
@@ -78,22 +80,27 @@ The power grid is a directed graph: **Generators** → **PowerStorages** → **T
 
 `PlayerAction` interface with four implementations inside `PlayerActionFactory`:
 - **`DetailsSelection`** — Default mode. Left-click selects an entity and shows its details. The selected entity reference is kept and details are refreshed every frame via `handleMouseMove`.
-- **`Building`** — Active when a build menu item is selected. Shows valid/invalid placement overlay, places entity on click.
+- **`Building`** — Active when a build menu item is selected. Shows valid/invalid placement overlay, places entity on click. **One-shot:** after successful placement, `buildMenu.resetSelection()` is called, returning to `detailsSelection`.
 - **`Wiring`** — Active when a conduit type is selected from the WiringMenu via ContextMenu. Left-clicking a valid `PowerConsumer` within range creates the conduit link and resets the mode. Persists as long as `wiringMenu.getSelectedConduit()` is non-null.
 - **`WireRemoval`** — Active when "Remove Wire" is clicked in the ContextMenu. Highlights connected consumers; clicking one removes the conduit and refunds scrap. Exits on right-click or successful removal.
 
 **`selectPlayerAction()` — critical design pattern.** This method runs every frame and derives `pendingPlayerAction` from UI state. It unconditionally falls through to `detailsSelection` at the bottom when no condition matches. This means:
 - **One-shot flags** (set by a UI callback, consumed by `selectPlayerAction`) only survive one frame. Actions that must persist across frames need either a per-frame condition that stays true (e.g. `wiringMenu.getSelectedConduit() != null`) or a guard boolean (e.g. `inWireRemovalMode`) that blocks the fallthrough.
 - **Flag lifecycle matters.** If a UI callback sets a flag then calls a cleanup method (like `hide()`) that blanket-resets all flags, the flag is cleared before `selectPlayerAction` reads it. Always set outbound flags AFTER cleanup calls.
-- **Mode cancellation.** Entering a new mode must cancel conflicting active modes — e.g. opening the ContextMenu calls `wiringMenu.resetSelection()` to cancel wiring; selecting a build item also cancels wiring.
+- **Mode cancellation.** Entering a new mode must cancel conflicting active modes — e.g. opening the ContextMenu calls `wiringMenu.resetSelection()` and `buildMenu.resetSelection()` to cancel both wiring and building.
+- **Right-click universally cancels.** All persistent player action modes (wiring, wire removal) exit on right-click. This is a hard convention — any new persistent mode must include a right-click exit path.
+- **UI click-through prevention.** `readInputs()` guards `pendingPlayerAction.handleClick()` with `isClickOnUI()`, which hit-tests all UI stages. Game actions never fire when the player clicks a UI element. Any new UI with its own Stage must be added to `isClickOnUI()`.
 
-Priority chain in `selectPlayerAction()`: sell confirm → wire removal request → wiring request → wire removal persistence → persistent wiring → build menu → detailsSelection.
+Priority chain in `selectPlayerAction()`: sell confirm → wire removal request → wiring request → wire removal persistence → build menu → persistent wiring → detailsSelection.
 
 ### UI (`ui/`)
 
 Five Scene2D-based UI elements: `BuildMenu`, `DetailsMenu`, `WiringMenu`, `ContextMenu`, `ScrapHud`. All share the game's `SpriteBatch`. Each has its own `Stage` registered in an `InputMultiplexer`. `PlayerInput` is first in the multiplexer so game clicks are not consumed by UI stages.
 
-- **`ContextMenu`** — Right-click popup on structures. Shows Wire, Remove Wire (if outgoing conduits exist), and Sell buttons. Sell uses two-click confirmation. Sets one-shot flags (`wiringRequested`, `wireRemovalRequested`, `sellConfirmed`) read by `selectPlayerAction()`. Opening a new menu cancels wiring mode via `wiringMenu.resetSelection()`.
+- **`ContextMenu`** — Right-click popup on structures. Shows Wire, Remove Wire (if outgoing conduits exist), and Sell buttons. Sell uses two-click confirmation. Sets one-shot flags (`wiringRequested`, `wireRemovalRequested`, `sellConfirmed`) read by `selectPlayerAction()`. Opening a new menu cancels both wiring and building via `wiringMenu.resetSelection()` and `buildMenu.resetSelection()`.
+- **`WiringMenu`** — Popup showing conduit types for wiring. Shown by ContextMenu's Wire button. Dismisses on click-outside via stage listener. If dismissed without selecting a conduit, `selectPlayerAction()` detects `!wiringMenu.isVisible()` and resets `wiringRequested`.
+- **Popup dismiss convention:** All popup menus (`ContextMenu`, `WiringMenu`) must dismiss on click-outside. They use a stage-level `InputListener` that checks `menuTable.hit()` and calls `hide()` when the click misses the menu. New popups must follow this pattern.
+- **`hide()` vs `resetSelection()` — visual + logical vs logical only.** `hide()` hides the menu table AND resets logical state (e.g. `selectedConduit = null`). `resetSelection()` only resets logical state without affecting visibility. When canceling a mode that involves a popup, always call `hide()` — calling only `resetSelection()` leaves a zombie menu visible on screen.
 - **`ScrapHud`** — Top-left label showing current scrap count. Polls `gameState.getScrap()` each frame; flashes green on gain, red on spend.
 
 ### Wire Rendering (`ConduitEntity`)
@@ -154,4 +161,3 @@ Feature plans and design documents live in `docs/specs/`. Each spec follows the 
 - **`TowerEntity.shoot()`** is empty — tower firing plays a sound but deals no damage and has no enemy targeting.
 - **Enemy simulation** (`simulateEnemies`) is not implemented.
 - **Level loading** is not implemented — `GameScreen` uses `populateGameStateWithDummyData()` instead.
-- **Scrap cost for building** — `registerLink()` now charges scrap, but structure placement in `Building.handleClick()` does not yet check or spend scrap.
