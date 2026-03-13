@@ -147,12 +147,14 @@ Two coordinate spaces: **world coordinates** (pixels, 64px per tile) and **mesh/
 New features are developed using a multi-agent pipeline invoked with the `/develop-feature` skill:
 
 1. **`feature-planner`** (Opus) — reads the codebase, writes a spec to `docs/specs/YYYYMMDD-<feature-name>.md`, returns a summary
-2. **Manual gate** — spec is printed inline for review; proceed only after approval
-3. **`implementer`** (Sonnet) — follows the spec, checks off steps as it goes, compiles before finishing
+2. **`Manual gate`** — spec is printed inline for review; proceed only after approval
+3. **`implementer`** (Opus) — follows the spec, explores the state machine before coding, checks off steps as it goes, compiles and runs tests before finishing
 4. **`test-generator`** (Sonnet) — writes JUnit 5 + Mockito tests for all new pure-logic code
 5. **`code-reviewer`** (Sonnet) — reviews correctness, performance, and convention adherence; loops back to the implementer if blockers are found
 
-Agents are defined in `.claude/agents/`. The skill is defined in `.claude/skills/develop-feature/SKILL.md`.
+Agents are defined in `.claude/agents/`. Shared conventions (UI state machine rules, performance rules, testing boundaries) are in `.claude/agents/shared-conventions.md` — this is the single source of truth referenced by all agents. The skill is defined in `.claude/skills/develop-feature/SKILL.md`.
+
+A PostToolUse hook (`.claude/settings.json`) automatically runs `./gradlew core:test` after any Java source file is edited, catching regressions immediately.
 
 Feature plans and design documents live in `docs/specs/`. Each spec follows the naming convention `YYYYMMDD-<feature-name>.md` and tracks the feature from design through implementation using checkboxes.
 

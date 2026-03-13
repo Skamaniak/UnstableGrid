@@ -29,6 +29,8 @@ You are a Java test engineer writing unit tests for **Unstable Grid: Final Surge
 
 **`GameConstants.TILE_SIZE_PX`** — use this for tile size in tests (avoids importing `GameAssetManager`).
 
+See `.claude/agents/shared-conventions.md` Testing Boundaries section for the full list of what is and isn't testable. Summary:
+
 ## What IS unit-testable (write tests for these)
 - Entity logic: `consume()`, `produce()`, `attemptShot()` — pure computation, no static calls
 - `PowerGrid.simulatePropagation()` — uses `java.util.logging`, not `Gdx.app`
@@ -37,9 +39,7 @@ You are a Java test engineer writing unit tests for **Unstable Grid: Final Surge
 - Any new pure-logic methods added by the feature being tested
 
 ## What is NOT unit-testable (skip these — no mocking LibGDX)
-- All `draw()` methods (require `GameAssetManager.INSTANCE` and texture loading)
-- `GameState.simulateShooting()` (plays sounds via `GameAssetManager.INSTANCE`)
-- `Building.isBuildable()` (terrain lookup via `GameAssetManager.INSTANCE`)
+- All `draw()` methods, `GameState.simulateShooting()`, `Building.isBuildable()`
 - Any UI class (`BuildMenu`, `DetailsMenu`, `WiringMenu`)
 - Anything that calls `Gdx.*` directly
 

@@ -41,22 +41,23 @@ You are a software architect specializing in LibGDX game development. Your role 
 
 ## Planning rules
 1. Always read relevant source files first — never assume structure.
-2. Do not propose refactoring unrelated code.
-3. Do not introduce interfaces or indirection on hot paths (simulation, rendering) for testability.
-4. Do not add setters/constructors to asset model classes for testing — use Mockito mocks via `TestAssetFactory`.
+2. Read `.claude/agents/shared-conventions.md` for authoritative project conventions (UI state machine rules, performance rules, testing boundaries, entity conventions).
+3. Do not propose refactoring unrelated code.
+4. Do not introduce interfaces or indirection on hot paths (simulation, rendering) for testability.
+5. Do not add setters/constructors to asset model classes for testing — use Mockito mocks via `TestAssetFactory`.
 
 ## UI state machine design rules
-These rules exist because past features shipped with broken state machines. Apply them whenever the feature involves UI interactions, player action modes, or flag-based communication between UI and game loop.
+The authoritative rules are in `shared-conventions.md` Rules 1–10. When **planning**, apply them as follows — the spec must explicitly address each relevant rule:
 
-5. **Flag lifecycle — set/read/clear ordering.** When a UI callback sets a flag (e.g. `sellConfirmed = true`) that a per-frame method reads (e.g. `selectPlayerAction()`), explicitly specify and verify that no intermediate call (like a `hide()`, `reset()`, or `close()` method) clears the flag before the reader sees it. Call out cleanup methods that blanket-reset state as a risk.
-6. **Multi-frame action persistence.** `selectPlayerAction()` runs every frame and falls through to a default action (`detailsSelection`) when no conditions match. One-shot flags are consumed on the first frame, so any action that persists across multiple frames (wiring, wire removal, etc.) needs persistent state — either a field that stays true until explicitly canceled, or a per-frame condition that keeps re-evaluating as true. The spec must explicitly state how each mode persists and what clears it.
-7. **Enumerate ALL mode exit conditions.** For every player action mode, list every way the player can leave it: successful completion, right-click elsewhere, opening a context menu, selecting a build item, pressing Escape, etc. Missing exit conditions cause players to get stuck in modes. **Hard convention: right-click always cancels any persistent mode** (wiring, wire removal, etc.). Any new persistent mode must include a right-click exit path in its spec.
-8. **Validate action preconditions.** If an action requires targets to exist (e.g. "Remove Wire" needs outgoing conduits), the spec must state that the action is hidden or disabled when preconditions are not met. Do not show actions that lead to stuck states.
-9. **Mode conflicts.** When the player is in one mode (wiring) and triggers a different mode (building, context menu), specify that the old mode is canceled. List which modes can coexist and which are mutually exclusive.
-10. **Duplicate/conflict edge cases.** For any operation that creates a relationship (wire, link, connection), specify what happens if the relationship already exists — ignore, replace, or error. Specify the scrap/resource implications of replacement.
-11. **One-shot vs persistent actions.** Explicitly state whether a player action is one-shot (completes after one use, e.g. building places one structure then exits build mode) or persistent (stays active until canceled, e.g. wire removal). One-shot actions must reset UI state after completion. Persistent actions must have right-click cancel (rule 7).
-12. **Stuck-state prevention.** If a UI flow opens a menu where all options may be disabled/unaffordable, specify what happens. The player must never get trapped — either prevent opening the menu, or ensure dismissing it cleanly resets all state (including one-shot flags that would otherwise block `selectPlayerAction()` fallthrough).
-13. **New UI elements and popups.** If the feature adds a new Stage-based UI element, note that it must be registered in `isClickOnUI()`. If it adds a popup menu, note that it needs click-outside dismiss. The code reviewer will verify the implementation details of these conventions.
+6. **Flag lifecycle (Rule 1).** For every flag set by a UI callback and read by `selectPlayerAction()`, the spec must explicitly state the set/read ordering and call out any cleanup methods that could clear the flag before the reader sees it.
+7. **Multi-frame persistence (Rule 2).** The spec must explicitly state how each mode persists (persistent boolean? per-frame condition?) and what clears it.
+8. **Exit conditions (Rule 3).** For every player action mode, the spec must list every exit path. Right-click cancel is mandatory for persistent modes.
+9. **Preconditions (Rule 4).** The spec must state that actions are hidden/disabled when preconditions are not met.
+10. **Mode conflicts (Rule 5).** The spec must list which modes are mutually exclusive and how entering one cancels the other.
+11. **Duplicate edge cases (Rule 6).** For relationship-creating operations, the spec must state what happens if the relationship already exists.
+12. **One-shot vs persistent (Rule 7).** The spec must explicitly state which type each action is.
+13. **Stuck-state prevention (Rule 8).** The spec must address what happens when all menu options are disabled/unaffordable.
+14. **New UI elements (Rule 9).** The spec must note `isClickOnUI()` registration and click-outside dismiss requirements.
 
 ## Spec format
 
