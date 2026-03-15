@@ -38,6 +38,16 @@ If a UI flow opens a menu where all options may be disabled/unaffordable, the pl
 ### Rule 10: SpriteBatch color contamination
 If code tints UI actors (e.g. `setColor(red)` for disabled buttons), `draw()` in `GameScreen` must reset `batch.setColor(Color.WHITE)` before `batch.begin()`. The shared batch does NOT reset color between frames.
 
+### Rule 11: Tinting button styles — use the skin's button drawable, not "white"
+When creating a tinted `TextButtonStyle` (e.g. a light-blue upgrade button or a red disabled button), tint the **existing skin drawable** — not the generic `"white"` drawable. `skin.newDrawable("white", color)` produces a flat rectangle that ignores the skin's nine-patch borders, making the button look visually different (transparent/missing edges). The correct pattern:
+```java
+TextButton.TextButtonStyle defaultStyle = skin.get(TextButton.TextButtonStyle.class);
+TextButton.TextButtonStyle tinted = new TextButton.TextButtonStyle(defaultStyle);
+tinted.up = skin.newDrawable(defaultStyle.up, myColor);
+tinted.down = skin.newDrawable(defaultStyle.up, myColor);
+```
+This preserves the nine-patch shape of the original button while applying the tint.
+
 ## Performance Rules
 
 - Do NOT introduce indirection (interfaces, callbacks, dependency injection) on hot paths (simulation, rendering) just for testability. These run at 60+ FPS.

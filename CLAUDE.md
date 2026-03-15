@@ -102,6 +102,7 @@ Five Scene2D-based UI elements: `BuildMenu`, `DetailsMenu`, `WiringMenu`, `Conte
 - **Popup dismiss convention:** All popup menus (`ContextMenu`, `WiringMenu`) must dismiss on click-outside. They use a stage-level `InputListener` that checks `menuTable.hit()` and calls `hide()` when the click misses the menu. New popups must follow this pattern.
 - **`hide()` vs `resetSelection()` — visual + logical vs logical only.** `hide()` hides the menu table AND resets logical state (e.g. `selectedConduit = null`). `resetSelection()` only resets logical state without affecting visibility. When canceling a mode that involves a popup, always call `hide()` — calling only `resetSelection()` leaves a zombie menu visible on screen.
 - **`ScrapHud`** — Top-left label showing current scrap count. Polls `gameState.getScrap()` each frame; flashes green on gain, red on spend.
+- **Tinting button styles:** When creating a colored variant of a button (e.g. light-blue upgrade, red disabled), always tint the skin's existing button drawable — not `"white"`. `skin.newDrawable("white", color)` produces a flat rectangle that loses the nine-patch borders. Correct pattern: `skin.newDrawable(defaultStyle.up, color)` where `defaultStyle = skin.get(TextButton.TextButtonStyle.class)`.
 
 ### Wire Rendering (`ConduitEntity`)
 
