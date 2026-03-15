@@ -1,6 +1,7 @@
 package com.skamaniak.ugfs.ui;
 
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
@@ -8,6 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.skamaniak.ugfs.asset.GameAssetManager;
@@ -30,6 +32,7 @@ public class ContextMenu {
     private boolean wireRemovalRequested;
     private boolean sellArmed;
     private boolean sellConfirmed;
+    private boolean upgradeRequested;
 
     private TextButton sellButton;
 
@@ -76,6 +79,7 @@ public class ContextMenu {
         wireRemovalRequested = false;
         sellArmed = false;
         sellConfirmed = false;
+        upgradeRequested = false;
         wiringMenu.hide();
         buildMenu.resetSelection();
 
@@ -84,6 +88,48 @@ public class ContextMenu {
         menuTable.setVisible(true);
 
         Skin skin = GameAssetManager.INSTANCE.getSkin();
+
+        // Upgrade button - always at the top
+        if (entity.canUpgrade()) {
+            int upgradeCost = entity.getUpgradeCost();
+            boolean canAfford = gameState.getScrap() >= upgradeCost;
+
+            TextButton.TextButtonStyle defaultStyle = skin.get(TextButton.TextButtonStyle.class);
+            TextButton.TextButtonStyle upgradeStyle = new TextButton.TextButtonStyle(defaultStyle);
+            if (canAfford) {
+                Drawable lightBlue = skin.newDrawable(defaultStyle.up, new Color(0.6f, 0.8f, 1f, 1f));
+                upgradeStyle.up = lightBlue;
+                upgradeStyle.down = lightBlue;
+            } else {
+                Drawable red = skin.newDrawable(defaultStyle.up, new Color(0.8f, 0.2f, 0.2f, 1f));
+                upgradeStyle.up = red;
+                upgradeStyle.down = red;
+            }
+
+            TextButton upgradeButton = new TextButton("Upgrade (" + upgradeCost + " scrap)", upgradeStyle);
+            if (canAfford) {
+                upgradeButton.addListener(new InputListener() {
+                    @Override
+                    public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                        if (button == Input.Buttons.LEFT) {
+                            hide();
+                            upgradeRequested = true;
+                            return true;
+                        }
+                        return false;
+                    }
+                });
+            }
+            menuTable.add(upgradeButton).row();
+        } else {
+            TextButton.TextButtonStyle defaultStyle = skin.get(TextButton.TextButtonStyle.class);
+            TextButton.TextButtonStyle maxStyle = new TextButton.TextButtonStyle(defaultStyle);
+            Drawable gray = skin.newDrawable(defaultStyle.up, new Color(0.5f, 0.5f, 0.5f, 1f));
+            maxStyle.up = gray;
+            maxStyle.down = gray;
+            TextButton maxButton = new TextButton("Max Level", maxStyle);
+            menuTable.add(maxButton).row();
+        }
 
         if (entity instanceof PowerProducer) {
             TextButton wireButton = new TextButton("Wire", skin);
@@ -171,6 +217,7 @@ public class ContextMenu {
         sellConfirmed = false;
         wiringRequested = false;
         wireRemovalRequested = false;
+        upgradeRequested = false;
     }
 
     public GameEntity getTargetEntity() {
@@ -199,5 +246,13 @@ public class ContextMenu {
 
     public void resetSellConfirmed() {
         sellConfirmed = false;
+    }
+
+    public boolean isUpgradeRequested() {
+        return upgradeRequested;
+    }
+
+    public void resetUpgradeRequested() {
+        upgradeRequested = false;
     }
 }

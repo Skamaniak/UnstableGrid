@@ -5,7 +5,9 @@ import com.skamaniak.ugfs.asset.model.Generator;
 import com.skamaniak.ugfs.asset.model.PowerStorage;
 import com.skamaniak.ugfs.asset.model.Tower;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -27,6 +29,24 @@ public class TestAssetFactory {
         return generator;
     }
 
+    /**
+     * Creates a multi-level Generator mock. Each int[] in levelStats is
+     * {capacity, generationRate, scrapCost} for that level.
+     */
+    public static Generator createMultiLevelGenerator(int[]... levelStats) {
+        List<Generator.Level> levels = new ArrayList<>();
+        for (int[] stats : levelStats) {
+            Generator.Level lvl = mock(Generator.Level.class);
+            when(lvl.getPowerStorage()).thenReturn(stats[0]);
+            when(lvl.getPowerGenerationRate()).thenReturn(stats[1]);
+            when(lvl.getScrapCost()).thenReturn(stats[2]);
+            levels.add(lvl);
+        }
+        Generator generator = mock(Generator.class);
+        when(generator.getLevels()).thenReturn(levels);
+        return generator;
+    }
+
     public static PowerStorage createPowerStorage(int capacity, int standbyLoss) {
         return createPowerStorage(capacity, standbyLoss, 0);
     }
@@ -39,6 +59,24 @@ public class TestAssetFactory {
 
         PowerStorage storage = mock(PowerStorage.class);
         when(storage.getLevels()).thenReturn(Collections.singletonList(level));
+        return storage;
+    }
+
+    /**
+     * Creates a multi-level PowerStorage mock. Each int[] in levelStats is
+     * {capacity, standbyLoss, scrapCost} for that level.
+     */
+    public static PowerStorage createMultiLevelPowerStorage(int[]... levelStats) {
+        List<PowerStorage.Level> levels = new ArrayList<>();
+        for (int[] stats : levelStats) {
+            PowerStorage.Level lvl = mock(PowerStorage.Level.class);
+            when(lvl.getPowerStorage()).thenReturn(stats[0]);
+            when(lvl.getPowerLossStandby()).thenReturn(stats[1]);
+            when(lvl.getScrapCost()).thenReturn(stats[2]);
+            levels.add(lvl);
+        }
+        PowerStorage storage = mock(PowerStorage.class);
+        when(storage.getLevels()).thenReturn(levels);
         return storage;
     }
 
@@ -56,6 +94,26 @@ public class TestAssetFactory {
 
         Tower tower = mock(Tower.class);
         when(tower.getLevels()).thenReturn(Collections.singletonList(level));
+        return tower;
+    }
+
+    /**
+     * Creates a multi-level Tower mock. Each entry is {capacity, standbyLoss, shotCost, scrapCost}
+     * (fireRate defaults to 1.0 for simplicity). Use the overload below for custom fireRate.
+     */
+    public static Tower createMultiLevelTower(int[]... levelStats) {
+        List<Tower.Level> levels = new ArrayList<>();
+        for (int[] stats : levelStats) {
+            Tower.Level lvl = mock(Tower.Level.class);
+            when(lvl.getPowerStorage()).thenReturn(stats[0]);
+            when(lvl.getPowerLossStandby()).thenReturn(stats[1]);
+            when(lvl.getPowerCostShot()).thenReturn(stats[2]);
+            when(lvl.getFireRate()).thenReturn(1.0f);
+            when(lvl.getScrapCost()).thenReturn(stats[3]);
+            levels.add(lvl);
+        }
+        Tower tower = mock(Tower.class);
+        when(tower.getLevels()).thenReturn(levels);
         return tower;
     }
 

@@ -18,6 +18,7 @@ public class TowerEntity extends GameEntity implements PowerConsumer {
     public TowerEntity(Vector2 position, Tower tower) {
         super(position);
         this.tower = tower;
+        this.totalScrapInvested = towerLevel().getScrapCost();
     }
 
     @Override
@@ -90,6 +91,33 @@ public class TowerEntity extends GameEntity implements PowerConsumer {
             ", powerBank=" + powerBank +
             ", cumulativeDelta=" + cumulativeDelta +
             '}';
+    }
+
+    @Override
+    public int getLevel() {
+        return level;
+    }
+
+    @Override
+    public int getMaxLevel() {
+        return tower.getLevels().size();
+    }
+
+    @Override
+    public boolean canUpgrade() {
+        return level < getMaxLevel();
+    }
+
+    @Override
+    public int getUpgradeCost() {
+        return canUpgrade() ? tower.getLevels().get(level).getScrapCost() : -1;
+    }
+
+    @Override
+    public void applyUpgrade() {
+        int cost = getUpgradeCost();
+        level++;
+        totalScrapInvested += cost;
     }
 
     @Override

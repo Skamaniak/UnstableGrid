@@ -197,6 +197,17 @@ public class GameScreen implements Screen {
     }
 
     private void selectPlayerAction() {
+        // One-shot: upgrade requested
+        if (contextMenu.isUpgradeRequested()) {
+            GameEntity entity = contextMenu.getTargetEntity();
+            contextMenu.resetUpgradeRequested();
+            if (entity != null) {
+                gameState.upgradeEntity(entity);
+            }
+            pendingPlayerAction = playerActionFactory.detailsSelection();
+            return;
+        }
+
         // One-shot: sell confirmed
         if (contextMenu.isSellConfirmed()) {
             GameEntity entity = contextMenu.getTargetEntity();

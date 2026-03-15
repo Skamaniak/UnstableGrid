@@ -25,10 +25,7 @@ public class PowerStorageEntity extends GameEntity implements PowerConsumer, Pow
     public PowerStorageEntity(Vector2 position, PowerStorage storage) {
         super(position);
         this.storage = storage;
-    }
-
-    public void levelUp() {
-
+        this.totalScrapInvested = powerStorageLevel().getScrapCost();
     }
 
     @Override
@@ -121,6 +118,33 @@ public class PowerStorageEntity extends GameEntity implements PowerConsumer, Pow
             ", propagated=" + propagated +
             ", to=" + to +
             '}';
+    }
+
+    @Override
+    public int getLevel() {
+        return level;
+    }
+
+    @Override
+    public int getMaxLevel() {
+        return storage.getLevels().size();
+    }
+
+    @Override
+    public boolean canUpgrade() {
+        return level < getMaxLevel();
+    }
+
+    @Override
+    public int getUpgradeCost() {
+        return canUpgrade() ? storage.getLevels().get(level).getScrapCost() : -1;
+    }
+
+    @Override
+    public void applyUpgrade() {
+        int cost = getUpgradeCost();
+        level++;
+        totalScrapInvested += cost;
     }
 
     @Override

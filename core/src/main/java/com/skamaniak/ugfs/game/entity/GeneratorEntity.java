@@ -22,6 +22,7 @@ public class GeneratorEntity extends GameEntity implements PowerProducer {
     public GeneratorEntity(Vector2 position, Generator generator) {
         super(position);
         this.generator = generator;
+        this.totalScrapInvested = generatorLevel().getScrapCost();
     }
 
     @Override
@@ -79,6 +80,33 @@ public class GeneratorEntity extends GameEntity implements PowerProducer {
             ", powerBank=" + powerBank +
             ", to=" + to +
             '}';
+    }
+
+    @Override
+    public int getLevel() {
+        return level;
+    }
+
+    @Override
+    public int getMaxLevel() {
+        return generator.getLevels().size();
+    }
+
+    @Override
+    public boolean canUpgrade() {
+        return level < getMaxLevel();
+    }
+
+    @Override
+    public int getUpgradeCost() {
+        return canUpgrade() ? generator.getLevels().get(level).getScrapCost() : -1;
+    }
+
+    @Override
+    public void applyUpgrade() {
+        int cost = getUpgradeCost();
+        level++;
+        totalScrapInvested += cost;
     }
 
     @Override

@@ -139,7 +139,7 @@ public class GameState {
         generators.remove(generator);
         entityByPosition.remove(positionKey(generator));
         grid.removeSource(generator);
-        addScrap(generator.getScrapCost());
+        addScrap(generator.getTotalScrapInvested());
     }
 
     public void sellStorage(PowerStorageEntity storage) {
@@ -150,7 +150,7 @@ public class GameState {
         storages.remove(storage);
         entityByPosition.remove(positionKey(storage));
         grid.removeStorage(storage);
-        addScrap(storage.getScrapCost());
+        addScrap(storage.getTotalScrapInvested());
     }
 
     public void sellTower(TowerEntity tower) {
@@ -161,7 +161,7 @@ public class GameState {
         towers.remove(tower);
         entityByPosition.remove(positionKey(tower));
         grid.removeSink(tower);
-        addScrap(tower.getScrapCost());
+        addScrap(tower.getTotalScrapInvested());
     }
 
     public void sellEntity(GameEntity entity) {
@@ -174,6 +174,17 @@ public class GameState {
         } else {
             throw new RuntimeException("Unknown entity " + entity);
         }
+    }
+
+    public boolean upgradeEntity(GameEntity entity) {
+        if (!entity.canUpgrade()) {
+            return false;
+        }
+        if (!spendScrap(entity.getUpgradeCost())) {
+            return false;
+        }
+        entity.applyUpgrade();
+        return true;
     }
 
     public ConduitEntity findConduit(PowerSource from, PowerConsumer to) {
@@ -205,7 +216,7 @@ public class GameState {
     }
 
     public int computeSellValue(GameEntity entity) {
-        int total = entity.getScrapCost();
+        int total = entity.getTotalScrapInvested();
         for (ConduitEntity conduit : findConnectedConduits(entity)) {
             total += conduit.conduit.getScrapCost();
         }
@@ -267,7 +278,15 @@ public class GameState {
     }
 
     public void drawShapes(ShapeRenderer shapeRenderer) {
-        // TODO
+        for (GeneratorEntity generator : generators) {
+            generator.drawChevrons(shapeRenderer);
+        }
+        for (PowerStorageEntity storage : storages) {
+            storage.drawChevrons(shapeRenderer);
+        }
+        for (TowerEntity tower : towers) {
+            tower.drawChevrons(shapeRenderer);
+        }
     }
 
     private void drawTerrain() {
