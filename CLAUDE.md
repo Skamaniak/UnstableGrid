@@ -47,7 +47,7 @@ Each frame follows this sequence: `readInputs()` → `updateCamera()` → `gameS
 
 - **`UnstableGrid`** — `Game` subclass, holds shared `SpriteBatch`, `ShapeRenderer`, `BitmapFont`. Starts on `MainMenuScreen`, transitions to `GameScreen`.
 - **`GameScreen`** — Main game screen. Owns `SceneCamera`, `FitViewport` (1024x1024), `PlayerInput`, UI menus, and `PlayerAction` state machine. Currently hardcodes entities via `populateGameStateWithDummyData()` — real level loading is not yet implemented.
-- **`game/GameState`** — Central game state. Holds all entity sets (`generators`, `storages`, `towers`, `conduits`) and the `PowerGrid`. Handles entity registration, terrain lookups, simulation ticking, and rendering delegation.
+- **`game/GameState`** — Central game state. Holds all entity sets (`generators`, `storages`, `towers`, `conduits`), the `PowerGrid`, enemy instances, wave manager, and pathfinder. Handles entity registration, terrain lookups, simulation ticking (power → shooting → enemies), and rendering delegation. Checks `gameOver` flag after simulation.
 
 ### Power Grid Simulation (`simulation/`)
 
@@ -69,12 +69,14 @@ The power grid is a directed graph: **Generators** → **PowerStorages** → **T
 
 `GameEntity` (abstract, has position) → concrete types: `GeneratorEntity`, `PowerStorageEntity`, `TowerEntity`. `ConduitEntity` is separate — it implements `PowerConsumer` and `Drawable` but does not extend `GameEntity` (a conduit has no tile position of its own). `GameEntityFactory` creates entities from `GameAsset` definitions.
 
+`EnemyInstance` is also NOT a `GameEntity` — enemies move smoothly between tiles in world coordinates, are not selectable, and are not part of the power grid. It holds an `Enemy` asset reference, current health, world position, a path (list of waypoints), and alive/reachedBase flags. Its `move(delta)`, `takeDamage(amount)`, and `getHealthFraction()` methods are pure math and fully testable.
+
 ### Asset System (`asset/`)
 
 - **`GameAssetManager`** — Singleton (`INSTANCE`). Loads and caches all game data, textures, sounds, and skin. Tile size is 64px (`TILE_SIZE_PX`).
 - **`JsonAssetLoader`** — Reads JSON definitions from `assets/json/` using LibGDX's `Json` deserializer.
-- **`AssetType`** enum maps asset categories to filesystem paths under `assets/json/` (tower, generator, power-storage, conduit, terrain, level).
-- Asset model classes (`Tower`, `Generator`, `PowerStorage`, `Conduit`, `Terrain`, `Level`) all extend `GameAsset`.
+- **`AssetType`** enum maps asset categories to filesystem paths under `assets/json/` (tower, generator, power-storage, conduit, terrain, level, enemy).
+- Asset model classes (`Tower`, `Generator`, `PowerStorage`, `Conduit`, `Terrain`, `Level`, `Enemy`) all extend `GameAsset`.
 
 ### Player Actions (`action/`)
 
@@ -112,6 +114,24 @@ Wires are drawn as a repeated texture rotated to the wire angle using `SpriteBat
 
 Two coordinate spaces: **world coordinates** (pixels, 64px per tile) and **mesh/grid coordinates** (tile indices). `NavigationUtils` converts between them. Entity positions are stored in mesh coordinates; rendering multiplies by `TILE_SIZE_PX`.
 
+### Enemy Simulation (`game/`)
+
+Enemies spawn from level-defined spawn locations, pathfind to a base tile, and are targeted by towers. The simulation runs each frame in `GameState.simulateEnemies(delta)` after power propagation and shooting.
+
+**`Enemy`** (`asset/model/`) — JSON asset with `health`, `speed` (tiles/sec), `scrap` (kill reward), `flying` (boolean). Loaded from `assets/json/enemy/`.
+
+**`Level` extensions** — Three new fields: `base` (Position), `waves` (list of Wave with `wave` number and `delay` in seconds), `spawnLocations` (list of SpawnLocation with coordinates and `spawnPlan`). Each spawn plan entry references a wave number and lists enemies with staggered delays in ms.
+
+**`WaveManager`** — Drives the wave lifecycle. Takes `EnemyLookup` and `PathComputer` interfaces (not `java.util.function`) to stay decoupled from `GameAssetManager`. `update(delta, aliveEnemyCount)` returns newly spawned `EnemyInstance` objects. Wave N+1 starts after its configured delay once all wave-N enemies are dead. Private inner class `SpawnTimer` handles per-enemy staggered spawning within a wave.
+
+**`TilePathfinder`** — A* on the tile grid (4-directional, Manhattan heuristic). Obstacles = structures + water + impassable terrain. Paths are computed once at spawn time, not per frame. Flying enemies skip pathfinding — their path is just `[spawn, base]`. Constructor takes a `TerrainType[][]` (pre-built, defaults to WATER for missing tiles) and a live reference to the entity position map.
+
+**`TowerEntity.shoot()`** — Finds the closest alive `EnemyInstance` within `towerRange * TILE_SIZE_PX` pixel distance. Returns `boolean` — `true` only if a target was found and damaged. `attemptShot()` gates power consumption and fire timer reset on `shoot()` returning `true`, so towers never waste power or play sounds when no enemy is in range.
+
+**Game over** — When any enemy reaches the base tile, `gameOver` is set. `GameScreen.render()` checks this after `simulate()` and transitions to `MainMenuScreen`. Music is stopped via stored `Sound` reference and loop ID in `dispose()`.
+
+**Rendering (temporary placeholders)** — Spawn points: red circles. Base: green circle. Enemies: orange circles with health bars (ShapeRenderer pass). No sprites yet.
+
 ## Key Conventions
 
 - Assets are defined as JSON files in `assets/json/{type}/` and loaded at startup via `JsonAssetLoader`.
@@ -127,19 +147,23 @@ Two coordinate spaces: **world coordinates** (pixels, 64px per tile) and **mesh/
 - `static final` constants are free — the JVM inlines them at compile time.
 
 ### What is testable without refactoring
-- Entity logic methods (`consume()`, `produce()`, `attemptShot()`) are pure computation — no static calls, fully testable with mocked asset objects.
+- Entity logic methods (`consume()`, `produce()`, `attemptShot(delta, enemies)`) are pure computation — no static calls, fully testable with mocked asset objects.
 - `PowerGrid.simulatePropagation()` is testable (uses `java.util.logging` instead of `Gdx.app`).
 - `NavigationUtils` coordinate conversions are pure math.
 - `ConduitEntity.consume()` rate limiting and loss logic is pure math.
+- `EnemyInstance.move()`, `takeDamage()`, `getHealthFraction()` — pure math, no LibGDX calls.
+- `TilePathfinder.findPath()` — A* on a 2D array, pure logic.
+- `WaveManager.update()` — wave lifecycle and spawn timing, uses injected interfaces instead of statics.
 
 ### What requires LibGDX and is NOT unit tested
 - All `draw()` methods (texture loading via `GameAssetManager.INSTANCE`).
 - `GameState.simulateShooting()` (plays sounds via `GameAssetManager.INSTANCE`).
+- `GameState.simulateEnemies()` (orchestrates wave manager + enemy list inside `GameState`).
 - `Building.isBuildable()` (terrain lookup via `GameAssetManager.INSTANCE`).
 - UI classes (`BuildMenu`, `DetailsMenu`, `WiringMenu`).
 
 ### Mocking strategy
-- Asset model classes (`Generator`, `Tower`, `PowerStorage`, `Conduit`) have private fields with no setters (designed for JSON deserialization). Use **Mockito mocks** to create test instances — do NOT add setters or constructors to production code for testing purposes.
+- Asset model classes (`Generator`, `Tower`, `PowerStorage`, `Conduit`, `Enemy`) have private fields with no setters (designed for JSON deserialization). Use **Mockito mocks** to create test instances — do NOT add setters or constructors to production code for testing purposes.
 - Use `TestAssetFactory` helper class in `core/src/test/` for creating mocked assets with configurable stats.
 - `GameConstants.TILE_SIZE_PX` provides the tile size constant without importing `GameAssetManager`.
 
@@ -161,6 +185,9 @@ Feature plans and design documents live in `docs/specs/`. Each spec follows the 
 
 ## Known Issues & Incomplete Areas
 
-- **`TowerEntity.shoot()`** is empty — tower firing plays a sound but deals no damage and has no enemy targeting.
-- **Enemy simulation** (`simulateEnemies`) is not implemented.
 - **Level loading** is not implemented — `GameScreen` uses `populateGameStateWithDummyData()` instead.
+- **Enemy rendering** is placeholder (colored circles via `ShapeRenderer`). No sprites/icons yet.
+- **Enemies do not repath** when structures are built/sold. Existing enemies keep their spawn-time path and may walk through new structures. Future enemies pathfind around them.
+- **No wave HUD** — the player has no UI indication of current wave number or countdown.
+- **No victory condition** — when all waves are exhausted, nothing happens.
+- **No build-phase gate** — wave 1 timer starts immediately at game start.

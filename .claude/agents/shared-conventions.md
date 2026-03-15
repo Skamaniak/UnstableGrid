@@ -58,15 +58,19 @@ This preserves the nine-patch shape of the original button while applying the ti
 ## Testing Boundaries
 
 ### Testable (pure logic — no GameAssetManager, no Gdx.* calls)
-- Entity logic: `consume()`, `produce()`, `attemptShot()`
+- Entity logic: `consume()`, `produce()`, `attemptShot(delta, enemies)`
 - `PowerGrid.simulatePropagation()` (uses `java.util.logging`)
 - `NavigationUtils` coordinate conversions
 - `ConduitEntity.consume()` rate limiting and loss logic
+- `EnemyInstance.move()`, `takeDamage()`, `getHealthFraction()` — pure math
+- `TilePathfinder.findPath()` — A* on a 2D array
+- `WaveManager.update()` — wave lifecycle, uses injected interfaces (`EnemyLookup`, `PathComputer`)
 - Any new pure-logic methods
 
 ### NOT testable (requires LibGDX runtime)
 - All `draw()` methods
 - `GameState.simulateShooting()` (plays sounds)
+- `GameState.simulateEnemies()` (orchestrates wave manager + enemy list inside GameState)
 - `Building.isBuildable()` (terrain lookup)
 - All UI classes (`BuildMenu`, `DetailsMenu`, `WiringMenu`, `ContextMenu`, `ScrapHud`)
 
@@ -75,6 +79,12 @@ This preserves the nine-patch shape of the original button while applying the ti
 - Do NOT add setters or constructors to production code for testing.
 - Use `GameConstants.TILE_SIZE_PX` for tile size in tests.
 
+## Tower Targeting Convention
+
+`TowerEntity.shoot(enemies, level)` returns `boolean` — `true` only when a target was found and damaged. `attemptShot()` gates power consumption and fire timer reset on `shoot()` returning `true`. This ensures towers never waste power, reset their fire timer, or trigger sound effects when no enemy is in range. Any change to the shooting pipeline must preserve this gate.
+
+When testing `attemptShot()`, always provide an enemy within range if the test is about power or timing mechanics. Using `Collections.emptyList()` makes `attemptShot()` return `false` regardless of power/timer state, which silently tests the wrong condition.
+
 ## Entity & Asset Conventions
 
 - `ConduitEntity` does NOT extend `GameEntity` (no tile position).
@@ -82,5 +92,7 @@ This preserves the nine-patch shape of the original button while applying the ti
 - New `GridComponent` types must implement `resetPropagation()`.
 - Asset model classes have no setters — populated by JSON deserialization only.
 - New entity types need: JSON in `assets/json/{type}/`, a `GameAsset` subclass, and a `GameEntity` subclass.
+- `EnemyInstance` is NOT a `GameEntity` — it uses world coordinates directly, has no tile position, and is not part of the power grid.
+- `WaveManager` and `TilePathfinder` are decoupled from LibGDX via interfaces/constructor params. Keep them testable — do not add `GameAssetManager.INSTANCE` or `Gdx.*` calls.
 - Coordinate conversions go through `NavigationUtils`.
 - Java 8 source compatibility (exception: `KeyboardControls` uses `Set.of()`).
