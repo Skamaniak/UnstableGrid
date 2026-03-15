@@ -31,8 +31,7 @@ class PowerGridTest {
         grid.simulatePropagation(1.0f);
 
         // Generator produces 100, sends through conduit to tower
-        // Tower should have received power. Verify by attempting a shot.
-        assertTrue(towerEntity.attemptShot(1.0f));
+        assertTrue(towerEntity.getPowerBank() > 0, "Tower should have received power from generator");
     }
 
     @Test
@@ -59,7 +58,7 @@ class PowerGridTest {
         grid.simulatePropagation(1.0f);
 
         // Power should flow gen → storage → tower
-        assertTrue(towerEntity.attemptShot(1.0f));
+        assertTrue(towerEntity.getPowerBank() > 0, "Tower should have received power through storage");
     }
 
     @Test
@@ -117,7 +116,7 @@ class PowerGridTest {
         grid.simulatePropagation(1.0f);
 
         // Both generators produce 100 each, tower should receive power
-        assertTrue(towerEntity.attemptShot(1.0f));
+        assertTrue(towerEntity.getPowerBank() > 0, "Tower should have received power from both generators");
     }
 
     @Test
@@ -140,7 +139,7 @@ class PowerGridTest {
 
         // Generator has capacity 50, rate 100. Each 1s chunk: generates 100 capped to 50, sends 50.
         // 3 chunks (1.0 + 1.0 + 0.5): tower should have received power across all chunks
-        assertTrue(towerEntity.attemptShot(1.0f));
+        assertTrue(towerEntity.getPowerBank() > 0, "Tower should have received power across chunked simulation");
     }
 
     @Test
@@ -228,6 +227,6 @@ class PowerGridTest {
         grid.simulatePropagation(1.0f);
 
         // Tower should have accumulated power over 2 frames
-        assertTrue(towerEntity.attemptShot(1.0f));
+        assertTrue(towerEntity.getPowerBank() > 0, "Tower should have accumulated power over 2 propagation frames");
     }
 }

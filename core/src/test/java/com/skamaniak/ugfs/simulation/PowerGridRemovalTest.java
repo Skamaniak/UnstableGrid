@@ -83,7 +83,7 @@ class PowerGridRemovalTest {
         grid.addSource(gen1);
         grid.simulatePropagation(1.0f);
 
-        assertFalse(tower1.attemptShot(1.0f),
+        assertEquals(0f, tower1.getPowerBank(), 0.001f,
             "Tower should not receive power after source and its conduit have been removed");
     }
 
@@ -183,7 +183,7 @@ class PowerGridRemovalTest {
         grid.addSink(tower1);
         grid.simulatePropagation(1.0f);
 
-        assertFalse(tower1.attemptShot(1.0f),
+        assertEquals(0f, tower1.getPowerBank(), 0.001f,
             "Tower should not receive power after the connecting conduit was unregistered by removeSink");
     }
 
@@ -285,7 +285,7 @@ class PowerGridRemovalTest {
         grid.addStorage(storage);
         grid.simulatePropagation(1.0f);
 
-        assertFalse(tower1.attemptShot(1.0f),
+        assertEquals(0f, tower1.getPowerBank(), 0.001f,
             "Tower should not receive power after storage and its conduits have been removed");
     }
 
@@ -329,7 +329,7 @@ class PowerGridRemovalTest {
 
         // Confirm power flows before removal
         grid.simulatePropagation(1.0f);
-        assertTrue(tower1.attemptShot(1.0f), "Precondition: tower should be powered before source removal");
+        assertTrue(tower1.getPowerBank() > 0, "Precondition: tower should be powered before source removal");
 
         // Remove and verify no further routing
         grid.removeSource(gen1);
@@ -339,7 +339,7 @@ class PowerGridRemovalTest {
         grid.addSink(tower2);
         grid.simulatePropagation(1.0f);
 
-        assertFalse(tower2.attemptShot(1.0f),
+        assertEquals(0f, tower2.getPowerBank(), 0.001f,
             "A freshly added tower should receive no power once the only source was removed");
     }
 
@@ -360,7 +360,7 @@ class PowerGridRemovalTest {
 
         // Confirm chain works before removal
         grid.simulatePropagation(1.0f);
-        assertTrue(tower1.attemptShot(1.0f), "Precondition: tower should be powered through storage");
+        assertTrue(tower1.getPowerBank() > 0, "Precondition: tower should be powered through storage");
 
         // Remove storage — chain is broken
         grid.removeStorage(storage);
@@ -368,7 +368,7 @@ class PowerGridRemovalTest {
         grid.addSink(tower2);
         grid.simulatePropagation(1.0f);
 
-        assertFalse(tower2.attemptShot(1.0f),
+        assertEquals(0f, tower2.getPowerBank(), 0.001f,
             "A fresh tower should receive no power once the relay storage was removed");
     }
 }
