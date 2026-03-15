@@ -36,6 +36,9 @@ public class GameScreen implements Screen {
     private final GameEntityFactory gameEntityFactory;
     private final PlayerInput playerInput;
 
+    private final com.badlogic.gdx.audio.Sound music;
+    private final long musicId;
+
     // UI
     private final BuildMenu buildMenu;
     private final DetailsMenu detailsMenu;
@@ -53,7 +56,8 @@ public class GameScreen implements Screen {
     public GameScreen(UnstableGrid unstableGrid) {
         this.game = unstableGrid;
         this.gameState = new GameState(game, game.level);
-        GameAssetManager.INSTANCE.loadSound(game.level.getMusic()).loop(0.15f); //TODO take volume from settings
+        this.music = GameAssetManager.INSTANCE.loadSound(game.level.getMusic());
+        this.musicId = music.loop(0.15f); //TODO take volume from settings
         this.sceneCamera = new SceneCamera(this.game.level.getLevelWidth() * GameAssetManager.TILE_SIZE_PX / 2,
             this.game.level.getLevelHeight() * GameAssetManager.TILE_SIZE_PX / 2);
         this.viewport = new FitViewport(WORLD_WIDTH, WORLD_HEIGHT, sceneCamera);
@@ -124,6 +128,11 @@ public class GameScreen implements Screen {
         readInputs();
         updateCamera();
         gameState.simulate(delta);
+        if (gameState.isGameOver()) {
+            game.setScreen(new MainMenuScreen(game));
+            dispose();
+            return;
+        }
         selectPlayerAction();
         draw(delta);
     }
@@ -363,6 +372,7 @@ public class GameScreen implements Screen {
 
     @Override
     public void dispose() {
+        music.stop(musicId);
         buildMenu.dispose();
         detailsMenu.dispose();
         wiringMenu.dispose();

@@ -3,9 +3,12 @@ package com.skamaniak.ugfs.game.entity;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
+import com.skamaniak.ugfs.GameConstants;
 import com.skamaniak.ugfs.asset.GameAssetManager;
 import com.skamaniak.ugfs.asset.model.Tower;
 import com.skamaniak.ugfs.simulation.PowerConsumer;
+
+import java.util.List;
 
 public class TowerEntity extends GameEntity implements PowerConsumer {
     public final Tower tower;
@@ -38,6 +41,10 @@ public class TowerEntity extends GameEntity implements PowerConsumer {
         return power - powerStored;
     }
 
+    public float getPowerBank() {
+        return powerBank;
+    }
+
     private Tower.Level towerLevel() {
         return tower.getLevels().get(level - 1);
     }
@@ -47,28 +54,52 @@ public class TowerEntity extends GameEntity implements PowerConsumer {
         propagated = false;
     }
 
-    public boolean attemptShot(float delta) { //TODO what if delta is some huge number?
+    public boolean attemptShot(float delta, List<EnemyInstance> enemies) {
         cumulativeDelta += delta;
 
         Tower.Level level = towerLevel();
         float timeBetweenShots = 1f / level.getFireRate();
         if (cumulativeDelta >= timeBetweenShots) {
-
-            if (powerBank >= level.getPowerCostShot()) {
+            if (powerBank >= level.getPowerCostShot() && shoot(enemies, level)) {
                 powerBank -= level.getPowerCostShot();
                 cumulativeDelta -= timeBetweenShots;
-                shoot();
                 return true;
             } else {
-                // Not enough power to shoot. Do not cumulate delta further but be ready to shoot next time if power permits.
+                // Not enough power or no target — cap delta to avoid burst firing when a target appears.
                 cumulativeDelta = timeBetweenShots;
             }
         }
         return false;
     }
 
-    private void shoot() {
-        // TODO target enemy and cause damage
+    private boolean shoot(List<EnemyInstance> enemies, Tower.Level level) {
+        float rangePx = level.getTowerRange() * GameConstants.TILE_SIZE_PX;
+        float towerCenterX = (position.x + 0.5f) * GameConstants.TILE_SIZE_PX;
+        float towerCenterY = (position.y + 0.5f) * GameConstants.TILE_SIZE_PX;
+
+        EnemyInstance closest = null;
+        float closestDistSq = rangePx * rangePx;
+
+        for (int i = 0, n = enemies.size(); i < n; i++) {
+            EnemyInstance enemy = enemies.get(i);
+            if (!enemy.isAlive()) {
+                continue;
+            }
+            Vector2 enemyPos = enemy.getWorldCenter();
+            float dx = enemyPos.x - towerCenterX;
+            float dy = enemyPos.y - towerCenterY;
+            float distSq = dx * dx + dy * dy;
+            if (distSq <= closestDistSq) {
+                closestDistSq = distSq;
+                closest = enemy;
+            }
+        }
+
+        if (closest != null) {
+            closest.takeDamage(level.getDamage());
+            return true;
+        }
+        return false;
     }
 
     @Override
