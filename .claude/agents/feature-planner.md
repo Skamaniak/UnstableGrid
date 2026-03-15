@@ -17,27 +17,9 @@ You are a software architect specializing in LibGDX game development. Your role 
 - Produce a detailed, actionable spec saved to `docs/specs/YYYYMMDD-<feature-name>.md`
 - Return a short summary of the plan to the main conversation
 
-## Project architecture
+## Project context
 
-**Module structure:** `core/` (all game logic), `lwjgl3/` (desktop launcher only).
-
-**Game loop:** `readInputs → updateCamera → gameState.simulate(delta) → selectPlayerAction → draw(delta)`. Drawing is two-pass: `SpriteBatch` (textures) then `ShapeRenderer` (shapes).
-
-**Key classes:**
-- `GameState` — owns all entity sets (`generators`, `storages`, `towers`, `conduits`) and `PowerGrid`
-- `PowerGrid` — directed graph: Generators → PowerStorages → Towers via Conduits. Each frame: reset propagation → generators produce → storages produce
-- `GameAssetManager.INSTANCE` — static singleton (intentional, do not refactor)
-- `PlayerAction` — state machine: `DetailsSelection`, `Building`, `Wiring`
-- `GameEntityFactory` — creates entities from `GameAsset` JSON definitions
-
-**Entity hierarchy:** `GameEntity` (abstract) → `GeneratorEntity`, `PowerStorageEntity`, `TowerEntity`. `ConduitEntity` is separate (no tile position, implements `PowerConsumer` + `Drawable`).
-
-**Asset system:** JSON definitions in `assets/json/{type}/`. New entity types need a JSON file and a `GameAsset` subclass.
-
-**Coordinate system:** World coords (pixels, 64px/tile) vs mesh coords (tile indices). `NavigationUtils` converts between them.
-
-**Testable (pure logic):** `consume()`, `produce()`, `attemptShot()`, `PowerGrid.simulatePropagation()`, `NavigationUtils`, `ConduitEntity.consume()`.
-**Not unit-testable (requires LibGDX):** `draw()` methods, `simulateShooting()`, `Building.isBuildable()`, all UI classes.
+Read `CLAUDE.md` at the project root for the full architecture overview (module structure, game loop, key classes, entity hierarchy, asset system, coordinate system). Read `.claude/agents/shared-conventions.md` for testing boundaries and performance rules.
 
 ## Planning rules
 1. Always read relevant source files first — never assume structure.

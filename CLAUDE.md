@@ -41,6 +41,8 @@ Tests use JUnit 5 + Mockito. Test sources are in `core/src/test/`.
 
 Each frame follows this sequence: `readInputs()` → `updateCamera()` → `gameState.simulate(delta)` → `selectPlayerAction()` → `draw(delta)`. Drawing uses two passes: `SpriteBatch` for textures, then `ShapeRenderer` for shapes (with alpha blending).
 
+**Overlay mode:** When `overlayActive` is true (victory or defeat), the render loop short-circuits: only `waveHud.handleInput()` (to finish flash animations), `draw(delta)`, and the `GameOverOverlay` are processed. No simulation, no input reading, no `selectPlayerAction()`. The overlay is activated AFTER the final `draw()` so the player sees the last frame before the overlay appears.
+
 **SpriteBatch color reset:** `draw()` calls `game.batch.setColor(Color.WHITE)` before `batch.begin()` every frame. This is mandatory because the shared `SpriteBatch` does NOT reset its color between `begin()`/`end()` calls or between frames. Without this, any UI code that tints actors (e.g. red disabled buttons) will poison the game world rendering on the next frame.
 
 ### Core Package Layout (`com.skamaniak.ugfs`)
@@ -59,11 +61,9 @@ The power grid is a directed graph: **Generators** → **PowerStorages** → **T
 - `PowerProducer extends PowerSource` — actively produces power (`produce(delta)`)
 - `PowerGrid` — orchestrates simulation each frame: resets propagation on all nodes directly from its flat sets (no recursive traversal), then generators produce, then storages produce
 
-**Propagation flags in `PowerStorageEntity`:** Two boolean flags are needed to correctly handle all graph topologies:
-- `inProgress` — set before recursing into downstream consumers, cleared after. A cycle re-entry sees `inProgress=true` and refuses the power (returns it to the caller) to break the cycle.
-- `propagated` — set after processing completes. A second source reaching the same storage sees `propagated=true` and absorbs power into the bank without forwarding downstream again.
+**`PowerStorageEntity`** uses `inProgress`/`propagated` boolean flags to handle cycles and multi-source topologies during propagation. Read the source for details.
 
-**`ConduitEntity`** acts as an intermediary `PowerConsumer` — it registers itself via `from.addTo(this)` and forwards limited power (rate, loss) to its actual `to` target. It does **not** extend `GameEntity` so it cannot be found by `getEntityAt()`.
+**`ConduitEntity`** acts as an intermediary `PowerConsumer` — forwards limited power (rate, loss) to its target. Does **not** extend `GameEntity` (no tile position).
 
 ### Entity Hierarchy (`game/entity/`)
 
@@ -86,25 +86,24 @@ The power grid is a directed graph: **Generators** → **PowerStorages** → **T
 - **`Wiring`** — Active when a conduit type is selected from the WiringMenu via ContextMenu. Left-clicking a valid `PowerConsumer` within range creates the conduit link and resets the mode. Persists as long as `wiringMenu.getSelectedConduit()` is non-null.
 - **`WireRemoval`** — Active when "Remove Wire" is clicked in the ContextMenu. Highlights connected consumers; clicking one removes the conduit and refunds scrap. Exits on right-click or successful removal.
 
-**`selectPlayerAction()` — critical design pattern.** This method runs every frame and derives `pendingPlayerAction` from UI state. It unconditionally falls through to `detailsSelection` at the bottom when no condition matches. This means:
-- **One-shot flags** (set by a UI callback, consumed by `selectPlayerAction`) only survive one frame. Actions that must persist across frames need either a per-frame condition that stays true (e.g. `wiringMenu.getSelectedConduit() != null`) or a guard boolean (e.g. `inWireRemovalMode`) that blocks the fallthrough.
-- **Flag lifecycle matters.** If a UI callback sets a flag then calls a cleanup method (like `hide()`) that blanket-resets all flags, the flag is cleared before `selectPlayerAction` reads it. Always set outbound flags AFTER cleanup calls.
-- **Mode cancellation.** Entering a new mode must cancel conflicting active modes — e.g. opening the ContextMenu calls `wiringMenu.resetSelection()` and `buildMenu.resetSelection()` to cancel both wiring and building.
-- **Right-click universally cancels.** All persistent player action modes (wiring, wire removal) exit on right-click. This is a hard convention — any new persistent mode must include a right-click exit path.
-- **UI click-through prevention.** `readInputs()` guards `pendingPlayerAction.handleClick()` with `isClickOnUI()`, which hit-tests all UI stages. Game actions never fire when the player clicks a UI element. Any new UI with its own Stage must be added to `isClickOnUI()`.
+**`selectPlayerAction()` — critical design pattern.** This method runs every frame and derives `pendingPlayerAction` from UI state. It unconditionally falls through to `detailsSelection` at the bottom when no condition matches. The detailed rules for flag lifecycle, mode persistence, cancellation, and UI click-through prevention are in `.claude/agents/shared-conventions.md` Rules 1–9 — read those before modifying any player action code.
 
-Priority chain in `selectPlayerAction()`: sell confirm → wire removal request → wiring request → wire removal persistence → build menu → persistent wiring → detailsSelection.
+Priority chain in `selectPlayerAction()`: sell confirm → wire removal request → wiring request → wire removal persistence → build restriction check → build menu → persistent wiring → detailsSelection.
+
+**Build restriction during waves:** `selectPlayerAction()` checks `gameState.isBuildingAllowed()` before entering build mode. If a build item is selected but building is not allowed (wave active), `buildMenu.resetSelection()` is called and the action falls through to `detailsSelection`.
 
 ### UI (`ui/`)
 
-Five Scene2D-based UI elements: `BuildMenu`, `DetailsMenu`, `WiringMenu`, `ContextMenu`, `ScrapHud`. All share the game's `SpriteBatch`. Each has its own `Stage` registered in an `InputMultiplexer`. `PlayerInput` is first in the multiplexer so game clicks are not consumed by UI stages.
+Seven Scene2D-based UI elements: `BuildMenu`, `DetailsMenu`, `WiringMenu`, `ContextMenu`, `ScrapHud`, `WaveHud`, `GameOverOverlay`. All share the game's `SpriteBatch`. Each has its own `Stage` registered in an `InputMultiplexer`. `PlayerInput` is first in the multiplexer so game clicks are not consumed by UI stages.
 
 - **`ContextMenu`** — Right-click popup on structures. Shows Wire, Remove Wire (if outgoing conduits exist), and Sell buttons. Sell uses two-click confirmation. Sets one-shot flags (`wiringRequested`, `wireRemovalRequested`, `sellConfirmed`) read by `selectPlayerAction()`. Opening a new menu cancels both wiring and building via `wiringMenu.resetSelection()` and `buildMenu.resetSelection()`.
-- **`WiringMenu`** — Popup showing conduit types for wiring. Shown by ContextMenu's Wire button. Dismisses on click-outside via stage listener. If dismissed without selecting a conduit, `selectPlayerAction()` detects `!wiringMenu.isVisible()` and resets `wiringRequested`.
-- **Popup dismiss convention:** All popup menus (`ContextMenu`, `WiringMenu`) must dismiss on click-outside. They use a stage-level `InputListener` that checks `menuTable.hit()` and calls `hide()` when the click misses the menu. New popups must follow this pattern.
-- **`hide()` vs `resetSelection()` — visual + logical vs logical only.** `hide()` hides the menu table AND resets logical state (e.g. `selectedConduit = null`). `resetSelection()` only resets logical state without affecting visibility. When canceling a mode that involves a popup, always call `hide()` — calling only `resetSelection()` leaves a zombie menu visible on screen.
-- **`ScrapHud`** — Top-left label showing current scrap count. Polls `gameState.getScrap()` each frame; flashes green on gain, red on spend.
-- **Tinting button styles:** When creating a colored variant of a button (e.g. light-blue upgrade, red disabled), always tint the skin's existing button drawable — not `"white"`. `skin.newDrawable("white", color)` produces a flat rectangle that loses the nine-patch borders. Correct pattern: `skin.newDrawable(defaultStyle.up, color)` where `defaultStyle = skin.get(TextButton.TextButtonStyle.class)`.
+- **`WiringMenu`** — Popup showing conduit types for wiring. Shown by ContextMenu's Wire button. Dismisses on click-outside via stage listener.
+- **`BuildMenu`** — Bottom-left build panel with tabbed categories. Disables all buttons (`Touchable.disabled`) during active waves and when unaffordable.
+- **`ScrapHud`** — Top-left label showing current scrap count. Flashes green on gain, red on spend.
+- **`WaveHud`** — Top-center labels showing wave countdown, wave number, enemy counts. Flash text below the HUD on wave transitions (red on wave start, green on wave end).
+- **`GameOverOverlay`** — Semi-transparent overlay shown on victory (green "Victory") or defeat (red "Defeated") with a "Main Menu" button.
+
+UI implementation conventions (Label sizing, button disabling, popup dismiss, tinting, Stage disposal safety) are in `.claude/agents/shared-conventions.md` Rules 9–15.
 
 ### Wire Rendering (`ConduitEntity`)
 
@@ -114,23 +113,24 @@ Wires are drawn as a repeated texture rotated to the wire angle using `SpriteBat
 
 Two coordinate spaces: **world coordinates** (pixels, 64px per tile) and **mesh/grid coordinates** (tile indices). `NavigationUtils` converts between them. Entity positions are stored in mesh coordinates; rendering multiplies by `TILE_SIZE_PX`.
 
-### Enemy Simulation (`game/`)
+### Enemy & Wave System (`game/`)
 
 Enemies spawn from level-defined spawn locations, pathfind to a base tile, and are targeted by towers. The simulation runs each frame in `GameState.simulateEnemies(delta)` after power propagation and shooting.
 
-**`Enemy`** (`asset/model/`) — JSON asset with `health`, `speed` (tiles/sec), `scrap` (kill reward), `flying` (boolean). Loaded from `assets/json/enemy/`.
+- **`Enemy`** — JSON asset with `health`, `speed`, `scrap` (kill reward), `flying`. Loaded from `assets/json/enemy/`.
+- **`EnemyInstance`** — NOT a `GameEntity`. Uses world coordinates, holds path (list of waypoints), alive/reachedBase flags. `repath()` replaces path from current position without teleporting.
+- **`WaveManager`** — Drives wave lifecycle. Decoupled from LibGDX via `EnemyLookup` and `PathComputer` interfaces. Exposes `WaveStatus` (mutable, reused per frame) with wave state for the HUD.
+- **`TilePathfinder`** — A* on tile grid (4-directional). Obstacles = structures + water + impassable terrain. Flying enemies skip pathfinding.
+- **`TowerEntity.shoot()`** — Returns `boolean`; `attemptShot()` gates power/timer/sound on it returning `true`.
 
-**`Level` extensions** — Three new fields: `base` (Position), `waves` (list of Wave with `wave` number and `delay` in seconds), `spawnLocations` (list of SpawnLocation with coordinates and `spawnPlan`). Each spawn plan entry references a wave number and lists enemies with staggered delays in ms.
+**Game flow:**
+- **Build phase:** Countdown before each wave. Building allowed, wiring/selling always allowed.
+- **Wave active:** Building disabled (`isBuildingAllowed()` returns false). Enemies spawn and pathfind.
+- **Sell during wave:** Triggers repathing for all alive non-flying enemies.
+- **Victory:** All waves exhausted + no alive enemies (gated by `!gameOver`). Shows overlay.
+- **Defeat:** Enemy reaches base. Shows overlay. Music continues until player exits.
 
-**`WaveManager`** — Drives the wave lifecycle. Takes `EnemyLookup` and `PathComputer` interfaces (not `java.util.function`) to stay decoupled from `GameAssetManager`. `update(delta, aliveEnemyCount)` returns newly spawned `EnemyInstance` objects. Wave N+1 starts after its configured delay once all wave-N enemies are dead. Private inner class `SpawnTimer` handles per-enemy staggered spawning within a wave.
-
-**`TilePathfinder`** — A* on the tile grid (4-directional, Manhattan heuristic). Obstacles = structures + water + impassable terrain. Paths are computed once at spawn time, not per frame. Flying enemies skip pathfinding — their path is just `[spawn, base]`. Constructor takes a `TerrainType[][]` (pre-built, defaults to WATER for missing tiles) and a live reference to the entity position map.
-
-**`TowerEntity.shoot()`** — Finds the closest alive `EnemyInstance` within `towerRange * TILE_SIZE_PX` pixel distance. Returns `boolean` — `true` only if a target was found and damaged. `attemptShot()` gates power consumption and fire timer reset on `shoot()` returning `true`, so towers never waste power or play sounds when no enemy is in range.
-
-**Game over** — When any enemy reaches the base tile, `gameOver` is set. `GameScreen.render()` checks this after `simulate()` and transitions to `MainMenuScreen`. Music is stopped via stored `Sound` reference and loop ID in `dispose()`.
-
-**Rendering (temporary placeholders)** — Spawn points: red circles. Base: green circle. Enemies: orange circles with health bars (ShapeRenderer pass). No sprites yet.
+**Rendering (temporary)** — Spawn points: red circles. Base: green circle. Enemies: orange circles with health bars.
 
 ## Key Conventions
 
@@ -141,31 +141,12 @@ Enemies spawn from level-defined spawn locations, pathfind to a base tile, and a
 
 ## Refactoring & Testing Guidelines
 
-### Performance-first approach
-- This is a game running at 60+ FPS. Do NOT introduce indirection (interfaces, callbacks, dependency injection) on hot paths (simulation, rendering) just for testability.
-- Static singletons like `GameAssetManager.INSTANCE` are intentional and idiomatic for game development. Do not refactor them into injected dependencies.
-- `static final` constants are free — the JVM inlines them at compile time.
+Performance rules, testing boundaries (what is/isn't unit testable), and mocking strategy are defined in `.claude/agents/shared-conventions.md` — the single source of truth referenced by all agents. Key points:
 
-### What is testable without refactoring
-- Entity logic methods (`consume()`, `produce()`, `attemptShot(delta, enemies)`) are pure computation — no static calls, fully testable with mocked asset objects.
-- `PowerGrid.simulatePropagation()` is testable (uses `java.util.logging` instead of `Gdx.app`).
-- `NavigationUtils` coordinate conversions are pure math.
-- `ConduitEntity.consume()` rate limiting and loss logic is pure math.
-- `EnemyInstance.move()`, `takeDamage()`, `getHealthFraction()` — pure math, no LibGDX calls.
-- `TilePathfinder.findPath()` — A* on a 2D array, pure logic.
-- `WaveManager.update()` — wave lifecycle and spawn timing, uses injected interfaces instead of statics.
-
-### What requires LibGDX and is NOT unit tested
-- All `draw()` methods (texture loading via `GameAssetManager.INSTANCE`).
-- `GameState.simulateShooting()` (plays sounds via `GameAssetManager.INSTANCE`).
-- `GameState.simulateEnemies()` (orchestrates wave manager + enemy list inside `GameState`).
-- `Building.isBuildable()` (terrain lookup via `GameAssetManager.INSTANCE`).
-- UI classes (`BuildMenu`, `DetailsMenu`, `WiringMenu`).
-
-### Mocking strategy
-- Asset model classes (`Generator`, `Tower`, `PowerStorage`, `Conduit`, `Enemy`) have private fields with no setters (designed for JSON deserialization). Use **Mockito mocks** to create test instances — do NOT add setters or constructors to production code for testing purposes.
-- Use `TestAssetFactory` helper class in `core/src/test/` for creating mocked assets with configurable stats.
-- `GameConstants.TILE_SIZE_PX` provides the tile size constant without importing `GameAssetManager`.
+- **Performance-first:** No indirection on hot paths for testability. `GameAssetManager.INSTANCE` is intentional.
+- **Testable:** Pure-logic methods (no `GameAssetManager`, no `Gdx.*` calls) — entity logic, `PowerGrid`, `NavigationUtils`, `EnemyInstance`, `WaveManager`, `TilePathfinder`.
+- **Not testable:** `draw()` methods, `simulateShooting()`, `simulateEnemies()`, `isBuildable()`, all UI classes.
+- **Mocking:** Use `TestAssetFactory` for mocked assets. Never add setters/constructors to production code for testing.
 
 ## Feature Development Workflow
 
@@ -187,7 +168,4 @@ Feature plans and design documents live in `docs/specs/`. Each spec follows the 
 
 - **Level loading** is not implemented — `GameScreen` uses `populateGameStateWithDummyData()` instead.
 - **Enemy rendering** is placeholder (colored circles via `ShapeRenderer`). No sprites/icons yet.
-- **Enemies do not repath** when structures are built/sold. Existing enemies keep their spawn-time path and may walk through new structures. Future enemies pathfind around them.
-- **No wave HUD** — the player has no UI indication of current wave number or countdown.
-- **No victory condition** — when all waves are exhausted, nothing happens.
-- **No build-phase gate** — wave 1 timer starts immediately at game start.
+- **Enemies do not repath when structures are built.** Existing enemies keep their spawn-time path and may walk through new structures. They DO repath when structures are sold (implemented in `GameState.sellEntity()`). Future enemies always pathfind around current structures at spawn time.

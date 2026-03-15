@@ -48,6 +48,24 @@ tinted.down = skin.newDrawable(defaultStyle.up, myColor);
 ```
 This preserves the nine-patch shape of the original button while applying the tint.
 
+### Rule 12: Scene2D Label sizing — call `pack()` after `setText()`
+Scene2D `Label` does NOT automatically resize its actor bounds when `setText()` changes the content. `getPrefWidth()`/`getPrefHeight()` return the correct values for the new text, but the actor's actual `getWidth()`/`getHeight()` remain stale. This causes two bugs:
+- **Positioning drift:** `setPosition()` based on `getPrefHeight()` may not match the actor's rendered bounds, causing labels to appear at wrong positions (especially multi-line labels vs single-line labels).
+- **Alignment misalignment:** `setAlignment(Align.center)` centers text within the actor's stale bounds, not the text's actual size, causing text to drift off-center when content changes.
+**Fix:** Always call `label.pack()` after `setText()`, then use `getWidth()`/`getHeight()` (not `getPref*()`) for positioning.
+
+### Rule 13: Disabling buttons — use `Touchable.disabled`, not just listener guards
+Scene2D `toggle`-style buttons fire their checked state change via the built-in `Button` input handling, which runs BEFORE any `ClickListener.clicked()` override. Returning early from `clicked()` does not prevent the toggle — the button visually changes state even when the listener rejects the click. **Fix:** Set `button.setTouchable(Touchable.disabled)` to prevent Scene2D from processing the click at all. Re-enable with `Touchable.enabled` when the button should be interactive again. This applies to any button that should be non-interactive (unaffordable, wave-restricted, etc.).
+
+### Rule 14: Never dispose a Stage from within its own event listener
+Disposing a `Stage` (or an actor's parent Stage) from inside an active `ClickListener.clicked()` callback is unsafe — the Stage may clear its actor list while still iterating the event dispatch call stack. **Fix:** Wrap the disposal + screen transition in `Gdx.app.postRunnable(() -> { ... })` to defer it to after the current frame's event processing completes.
+
+### Rule 15: Non-button backgrounds — use Pixmap-backed Texture, not `skin.newDrawable("white", ...)`
+`skin.newDrawable("white", color)` depends on the skin's Atlas containing a drawable named `"white"`, which is not guaranteed and will throw `NullPointerException` at runtime if missing. For non-button backgrounds (overlays, panels, etc.), create a 1x1 white `Pixmap`, build a `Texture` from it, wrap in `TextureRegionDrawable`, and call `.tint(color)`. Dispose the Pixmap immediately after Texture creation; store the Texture reference for disposal later.
+
+### Rule 16: Mutually exclusive game state flags must be gated
+When multiple end-state flags can be set in the same simulation frame (e.g. `gameOver` and `victory`), later checks must be gated on earlier flags. Example: if an enemy reaches the base (sets `gameOver = true`) and is the last enemy (would set `victory = true`), `victory` must check `!gameOver` first. Without this gate, both flags are true and the wrong overlay is shown.
+
 ## Performance Rules
 
 - Do NOT introduce indirection (interfaces, callbacks, dependency injection) on hot paths (simulation, rendering) just for testability. These run at 60+ FPS.
@@ -62,9 +80,10 @@ This preserves the nine-patch shape of the original button while applying the ti
 - `PowerGrid.simulatePropagation()` (uses `java.util.logging`)
 - `NavigationUtils` coordinate conversions
 - `ConduitEntity.consume()` rate limiting and loss logic
-- `EnemyInstance.move()`, `takeDamage()`, `getHealthFraction()` — pure math
+- `EnemyInstance.move()`, `takeDamage()`, `getHealthFraction()`, `repath()`, `isFlying()` — pure math
 - `TilePathfinder.findPath()` — A* on a 2D array
 - `WaveManager.update()` — wave lifecycle, uses injected interfaces (`EnemyLookup`, `PathComputer`)
+- `WaveManager.getWaveStatus()` — wave status data (active, countdown, pending spawns, exhausted)
 - Any new pure-logic methods
 
 ### NOT testable (requires LibGDX runtime)
