@@ -11,7 +11,7 @@ public class EnemyInstance {
     private final float maxHealth;
     private float currentHealth;
     private final Vector2 worldPosition;
-    private final List<Vector2> path;
+    private List<Vector2> path;
     private int pathIndex;
     private boolean alive;
     private boolean reachedBase;
@@ -88,5 +88,20 @@ public class EnemyInstance {
 
     public Vector2 getWorldPosition() {
         return worldPosition;
+    }
+
+    public void repath(List<Vector2> newPath) {
+        if (newPath == null) {
+            return;
+        }
+        this.path = newPath;
+        this.pathIndex = 0;
+        if (!newPath.isEmpty()) {
+            newPath.set(0, new Vector2(worldPosition));
+        }
+    }
+
+    public boolean isFlying() {
+        return enemy.isFlying();
     }
 }

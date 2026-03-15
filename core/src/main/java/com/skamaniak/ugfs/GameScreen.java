@@ -22,7 +22,9 @@ import com.skamaniak.ugfs.simulation.PowerProducer;
 import com.skamaniak.ugfs.ui.BuildMenu;
 import com.skamaniak.ugfs.ui.ContextMenu;
 import com.skamaniak.ugfs.ui.DetailsMenu;
+import com.skamaniak.ugfs.ui.GameOverOverlay;
 import com.skamaniak.ugfs.ui.ScrapHud;
+import com.skamaniak.ugfs.ui.WaveHud;
 import com.skamaniak.ugfs.ui.WiringMenu;
 import com.skamaniak.ugfs.view.SceneCamera;
 
@@ -45,6 +47,9 @@ public class GameScreen implements Screen {
     private final WiringMenu wiringMenu;
     private final ContextMenu contextMenu;
     private final ScrapHud scrapHud;
+    private final WaveHud waveHud;
+    private final GameOverOverlay gameOverOverlay;
+    private boolean overlayActive;
 
     // Player Actions
     private final PlayerActionFactory playerActionFactory;
@@ -70,6 +75,13 @@ public class GameScreen implements Screen {
         this.wiringMenu = new WiringMenu(unstableGrid.batch, gameState);
         this.contextMenu = new ContextMenu(unstableGrid.batch, gameState, playerInput, wiringMenu, buildMenu);
         this.scrapHud = new ScrapHud(unstableGrid.batch, gameState);
+        this.waveHud = new WaveHud(unstableGrid.batch, gameState);
+        this.gameOverOverlay = new GameOverOverlay(unstableGrid.batch, unstableGrid, new Runnable() {
+            @Override
+            public void run() {
+                dispose();
+            }
+        });
 
         this.playerActionFactory = new PlayerActionFactory(gameState, playerInput, this::showGameObjectDetails, this::buildGameObject, this::onWireCreated);
         this.pendingPlayerAction = playerActionFactory.detailsSelection();
@@ -125,16 +137,22 @@ public class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
+        if (overlayActive) {
+            waveHud.handleInput();
+            draw(delta);
+            gameOverOverlay.handleInput();
+            gameOverOverlay.draw();
+            return;
+        }
         readInputs();
         updateCamera();
         gameState.simulate(delta);
-        if (gameState.isGameOver()) {
-            game.setScreen(new MainMenuScreen(game));
-            dispose();
-            return;
-        }
         selectPlayerAction();
         draw(delta);
+        if (gameState.isGameOver() || gameState.isVictory()) {
+            overlayActive = true;
+            gameOverOverlay.show(gameState.isVictory());
+        }
     }
 
     private void readInputs() {
@@ -170,6 +188,7 @@ public class GameScreen implements Screen {
         wiringMenu.handleInput();
         contextMenu.handleInput();
         scrapHud.handleInput();
+        waveHud.handleInput();
 
         pendingPlayerAction.handleMouseMove(playerInput.getMousePosition());
     }
@@ -203,6 +222,7 @@ public class GameScreen implements Screen {
         wiringMenu.draw();
         contextMenu.draw();
         scrapHud.draw();
+        waveHud.draw();
     }
 
     private void selectPlayerAction() {
@@ -272,9 +292,13 @@ public class GameScreen implements Screen {
         // Build mode takes priority over persistent wiring
         GameAsset buildAsset = buildMenu.getSelectedAsset();
         if (buildAsset != null) {
-            wiringMenu.resetSelection();
-            pendingPlayerAction = playerActionFactory.building(buildAsset);
-            return;
+            if (!gameState.isBuildingAllowed()) {
+                buildMenu.resetSelection();
+            } else {
+                wiringMenu.resetSelection();
+                pendingPlayerAction = playerActionFactory.building(buildAsset);
+                return;
+            }
         }
 
         // Persistent wiring: conduit still selected from WiringMenu
@@ -314,7 +338,9 @@ public class GameScreen implements Screen {
         float screenY = Gdx.input.getY();
         return hitTestStage(buildMenu.getStage(), screenX, screenY)
             || hitTestStage(contextMenu.getStage(), screenX, screenY)
-            || hitTestStage(wiringMenu.getStage(), screenX, screenY);
+            || hitTestStage(wiringMenu.getStage(), screenX, screenY)
+            || hitTestStage(waveHud.getStage(), screenX, screenY)
+            || hitTestStage(gameOverOverlay.getStage(), screenX, screenY);
     }
 
     private boolean hitTestStage(Stage stage, float screenX, float screenY) {
@@ -341,17 +367,21 @@ public class GameScreen implements Screen {
         wiringMenu.resize(width, height);
         contextMenu.resize(width, height);
         scrapHud.resize(width, height);
+        waveHud.resize(width, height);
+        gameOverOverlay.resize(width, height);
     }
 
     @Override
     public void show() {
         InputMultiplexer multiplexer = new InputMultiplexer();
         multiplexer.addProcessor(playerInput);
+        multiplexer.addProcessor(gameOverOverlay.getStage());
         multiplexer.addProcessor(contextMenu.getStage());
         multiplexer.addProcessor(buildMenu.getStage());
         multiplexer.addProcessor(detailsMenu.getStage());
         multiplexer.addProcessor(wiringMenu.getStage());
         multiplexer.addProcessor(scrapHud.getStage());
+        multiplexer.addProcessor(waveHud.getStage());
         Gdx.input.setInputProcessor(multiplexer);
     }
 
@@ -378,5 +408,7 @@ public class GameScreen implements Screen {
         wiringMenu.dispose();
         contextMenu.dispose();
         scrapHud.dispose();
+        waveHud.dispose();
+        gameOverOverlay.dispose();
     }
 }

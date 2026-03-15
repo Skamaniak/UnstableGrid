@@ -20,6 +20,44 @@ public class WaveManager {
     private float waveTimer;
     private boolean waveActive;
     private final List<SpawnTimer> activeSpawnTimers = new ArrayList<>();
+    private final WaveStatus waveStatus = new WaveStatus();
+
+    public static class WaveStatus {
+        private boolean waveActive;
+        private int currentWaveNumber;
+        private int totalWaves;
+        private float countdown;
+        private boolean allWavesExhausted;
+        private int pendingSpawnCount;
+
+        public boolean isWaveActive() {
+            return waveActive;
+        }
+
+        public int getCurrentWaveNumber() {
+            return currentWaveNumber;
+        }
+
+        public int getTotalWaves() {
+            return totalWaves;
+        }
+
+        public float getCountdown() {
+            return countdown;
+        }
+
+        public boolean isAllWavesExhausted() {
+            return allWavesExhausted;
+        }
+
+        public int getPendingSpawnCount() {
+            return pendingSpawnCount;
+        }
+    }
+
+    public WaveStatus getWaveStatus() {
+        return waveStatus;
+    }
 
     public interface EnemyLookup {
         Enemy getEnemy(String id);
@@ -45,6 +83,7 @@ public class WaveManager {
 
     public List<EnemyInstance> update(float delta, int aliveEnemyCount) {
         if (waves == null || waves.isEmpty()) {
+            populateWaveStatus();
             return Collections.emptyList();
         }
 
@@ -52,6 +91,7 @@ public class WaveManager {
 
         if (!waveActive) {
             if (currentWaveNumber >= waves.size()) {
+                populateWaveStatus();
                 return Collections.emptyList();
             }
 
@@ -59,6 +99,7 @@ public class WaveManager {
             if (waveTimer <= 0) {
                 startNextWave();
             } else {
+                populateWaveStatus();
                 return Collections.emptyList();
             }
         }
@@ -79,7 +120,23 @@ public class WaveManager {
             }
         }
 
+        populateWaveStatus();
         return spawned;
+    }
+
+    private void populateWaveStatus() {
+        int totalWaves = (waves == null) ? 0 : waves.size();
+        waveStatus.waveActive = this.waveActive;
+        waveStatus.currentWaveNumber = this.currentWaveNumber;
+        waveStatus.totalWaves = totalWaves;
+        waveStatus.countdown = this.waveTimer;
+        waveStatus.allWavesExhausted = this.currentWaveNumber >= totalWaves && !this.waveActive;
+
+        int pending = 0;
+        for (int i = 0, n = activeSpawnTimers.size(); i < n; i++) {
+            pending += activeSpawnTimers.get(i).getRemainingCount();
+        }
+        waveStatus.pendingSpawnCount = pending;
     }
 
     private void startNextWave() {
@@ -150,6 +207,10 @@ public class WaveManager {
 
         boolean isExhausted() {
             return nextIndex >= enemies.size();
+        }
+
+        int getRemainingCount() {
+            return enemies.size() - nextIndex;
         }
     }
 }

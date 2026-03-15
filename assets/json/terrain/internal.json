@@ -1,0 +1,8 @@
+{
+  "id": "terrain.internal",
+  "name": "Internal",
+  "description": "Terrain reserved for special tiles like base or spawn points.",
+  "assetType": "TERRAIN",
+  "tileSet": "visual/terrain/internal.png",
+  "terrainType": "NON_BUILDABLE"
+}

@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
@@ -114,9 +115,6 @@ public class BuildMenu {
             button.addListener(new ClickListener(){
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
-                    if (gameState.getScrap() < gameAsset.getBuildCost()) {
-                        return;
-                    }
                     resetSelection();
                     button.setChecked(true);
                     description.setText(gameAsset.getDescription());
@@ -153,11 +151,18 @@ public class BuildMenu {
 
     public void handleInput() {
         stage.act();
+        boolean buildingAllowed = gameState.isBuildingAllowed();
         for (Map.Entry<Button, GameAsset> entry : buildButtonAssets.entrySet()) {
-            if (gameState.getScrap() < entry.getValue().getBuildCost()) {
-                entry.getKey().setColor(0.8f, 0.3f, 0.3f, 1f);
+            Button button = entry.getKey();
+            if (!buildingAllowed) {
+                button.setTouchable(Touchable.disabled);
+                button.setColor(0.5f, 0.5f, 0.5f, 1f);
+            } else if (gameState.getScrap() < entry.getValue().getBuildCost()) {
+                button.setTouchable(Touchable.disabled);
+                button.setColor(0.8f, 0.3f, 0.3f, 1f);
             } else {
-                entry.getKey().setColor(Color.WHITE);
+                button.setTouchable(Touchable.enabled);
+                button.setColor(Color.WHITE);
             }
         }
     }

@@ -28,7 +28,7 @@ public class ScrapHud {
 
         scrapLabel = new Label("Scrap: " + lastDisplayedScrap, skin);
         scrapLabel.setAlignment(Align.topLeft);
-        scrapLabel.setPosition(10, viewport.getWorldHeight() - 30);
+        scrapLabel.pack();
         stage.addActor(scrapLabel);
     }
 
@@ -37,6 +37,7 @@ public class ScrapHud {
         int currentScrap = gameState.getScrap();
         if (currentScrap != lastDisplayedScrap) {
             scrapLabel.setText("Scrap: " + currentScrap);
+            scrapLabel.pack();
             scrapLabel.clearActions();
             if (currentScrap > lastDisplayedScrap) {
                 scrapLabel.addAction(Actions.sequence(
@@ -53,6 +54,7 @@ public class ScrapHud {
             }
             lastDisplayedScrap = currentScrap;
         }
+        scrapLabel.setPosition(10, viewport.getWorldHeight() - scrapLabel.getHeight() - 10);
     }
 
     public void draw() {
@@ -62,7 +64,7 @@ public class ScrapHud {
 
     public void resize(int width, int height) {
         viewport.update(width, height, true);
-        scrapLabel.setPosition(10, viewport.getWorldHeight() - 30);
+        scrapLabel.setPosition(10, viewport.getWorldHeight() - scrapLabel.getHeight() - 10);
     }
 
     public void dispose() {

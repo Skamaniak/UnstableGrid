@@ -43,6 +43,7 @@ public class GameState {
     private final WaveManager waveManager;
     private final TilePathfinder pathfinder;
     private boolean gameOver;
+    private boolean victory;
 
     private final Color healthBarColor = new Color();
 
@@ -104,6 +105,7 @@ public class GameState {
         } else {
             this.waveManager = null;
         }
+
     }
 
     public void registerEntity(GameEntity entity) {
@@ -233,6 +235,27 @@ public class GameState {
         } else {
             throw new RuntimeException("Unknown entity " + entity);
         }
+        repathAliveEnemies();
+    }
+
+    private void repathAliveEnemies() {
+        Level.Position base = level.getBase();
+        if (base == null) {
+            return;
+        }
+        int baseX = base.getX();
+        int baseY = base.getY();
+        for (int i = 0, n = enemies.size(); i < n; i++) {
+            EnemyInstance enemy = enemies.get(i);
+            if (!enemy.isAlive() || enemy.isFlying()) {
+                continue;
+            }
+            Vector2 pos = enemy.getWorldPosition();
+            int sx = (int) (pos.x / GameConstants.TILE_SIZE_PX);
+            int sy = (int) (pos.y / GameConstants.TILE_SIZE_PX);
+            List<Vector2> newPath = pathfinder.findPath(sx, sy, baseX, baseY);
+            enemy.repath(newPath);
+        }
     }
 
     public boolean upgradeEntity(GameEntity entity) {
@@ -351,10 +374,45 @@ public class GameState {
                 it.remove();
             }
         }
+
+        if (waveManager != null) {
+            WaveManager.WaveStatus status = waveManager.getWaveStatus();
+            if (!gameOver && status.isAllWavesExhausted() && enemies.isEmpty()) {
+                victory = true;
+            }
+        }
     }
 
     public boolean isGameOver() {
         return gameOver;
+    }
+
+    public boolean isVictory() {
+        return victory;
+    }
+
+    public WaveManager.WaveStatus getWaveStatus() {
+        if (waveManager == null) {
+            return null;
+        }
+        return waveManager.getWaveStatus();
+    }
+
+    public boolean isBuildingAllowed() {
+        if (waveManager == null) {
+            return true;
+        }
+        return !waveManager.getWaveStatus().isWaveActive();
+    }
+
+    public int getAliveEnemyCount() {
+        int count = 0;
+        for (int i = 0, n = enemies.size(); i < n; i++) {
+            if (enemies.get(i).isAlive()) {
+                count++;
+            }
+        }
+        return count;
     }
 
     public void drawTextures(float delta) {
