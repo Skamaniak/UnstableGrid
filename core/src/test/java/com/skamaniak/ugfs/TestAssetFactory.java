@@ -1,6 +1,7 @@
 package com.skamaniak.ugfs;
 
 import com.skamaniak.ugfs.asset.model.Conduit;
+import com.skamaniak.ugfs.asset.model.Enemy;
 import com.skamaniak.ugfs.asset.model.Generator;
 import com.skamaniak.ugfs.asset.model.PowerStorage;
 import com.skamaniak.ugfs.asset.model.Tower;
@@ -114,6 +115,37 @@ public class TestAssetFactory {
         }
         Tower tower = mock(Tower.class);
         when(tower.getLevels()).thenReturn(levels);
+        return tower;
+    }
+
+    /**
+     * Creates an Enemy mock with the given stats.
+     */
+    public static Enemy createEnemy(int health, float speed, int scrap, boolean flying) {
+        Enemy enemy = mock(Enemy.class);
+        when(enemy.getHealth()).thenReturn(health);
+        when(enemy.getSpeed()).thenReturn(speed);
+        when(enemy.getScrap()).thenReturn(scrap);
+        when(enemy.isFlying()).thenReturn(flying);
+        return enemy;
+    }
+
+    /**
+     * Creates a Tower mock that also stubs towerRange and damage on its single level.
+     */
+    public static Tower createTowerWithRange(int capacity, int standbyLoss, int shotCost, float fireRate,
+                                             float towerRange, int damage) {
+        Tower.Level level = mock(Tower.Level.class);
+        when(level.getPowerStorage()).thenReturn(capacity);
+        when(level.getPowerLossStandby()).thenReturn(standbyLoss);
+        when(level.getPowerCostShot()).thenReturn(shotCost);
+        when(level.getFireRate()).thenReturn(fireRate);
+        when(level.getTowerRange()).thenReturn(towerRange);
+        when(level.getDamage()).thenReturn(damage);
+        when(level.getScrapCost()).thenReturn(0);
+
+        Tower tower = mock(Tower.class);
+        when(tower.getLevels()).thenReturn(Collections.singletonList(level));
         return tower;
     }
 

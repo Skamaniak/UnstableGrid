@@ -6,7 +6,8 @@ public enum AssetType {
     POWER_STORAGE("assets/json/power-storage"),
     CONDUIT("assets/json/conduit"),
     TERRAIN("assets/json/terrain"),
-    LEVEL("assets/json/level");
+    LEVEL("assets/json/level"),
+    ENEMY("assets/json/enemy");
 
     private String assetPath;
 

@@ -35,6 +35,10 @@ public class JsonAssetLoader {
         return loadAssets(Level.class, AssetType.LEVEL.getAssetPath());
     }
 
+    public Map<String, Enemy> loadEnemies() {
+        return loadAssets(Enemy.class, AssetType.ENEMY.getAssetPath());
+    }
+
     private <T extends GameAsset> Map<String, T> loadAssets(Class<T> type, String directory) {
         FileHandle[] assetFiles = Gdx.files.internal(directory).list();
         Map<String, T> assets = new HashMap<>();

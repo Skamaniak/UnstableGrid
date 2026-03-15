@@ -4,7 +4,7 @@
   "description": "A tutorial level.",
   "assetType": "LEVEL",
   "music": "audio/music/level/tutorial.wav",
-  "scrap": 100,
+  "scrap": 1000,
   "levelWidth": 16,
   "levelHeight": 16,
   "map": [
@@ -263,5 +263,85 @@
     {"x": 12, "y": 0, "terrainId": "terrain.water-clay", "tileNumber": 2, "variant": 1},
     {"x": 13, "y": 0, "terrainId": "terrain.water-clay", "tileNumber": 2, "variant": 0},
     {"x": 14, "y": 0, "terrainId": "terrain.water-clay", "tileNumber": 2, "variant": 0},
-    {"x": 15, "y": 0, "terrainId": "terrain.water-clay", "tileNumber": 8, "variant": 1}]
+    {"x": 15, "y": 0, "terrainId": "terrain.water-clay", "tileNumber": 8, "variant": 1}],
+  "base": {"x": 8, "y": 8},
+  "waves": [
+    {"wave": 1, "delay": 60.0},
+    {"wave": 2, "delay": 60.0},
+    {"wave": 3, "delay": 60.0}
+  ],
+  "spawnLocations": [
+    {
+      "x": 1, "y": 14,
+      "spawnPlan": [
+        {
+          "wave": 1,
+          "enemies": [
+            {"enemyId": "enemy.zombie", "delay": 0},
+            {"enemyId": "enemy.zombie", "delay": 1000},
+            {"enemyId": "enemy.zombie", "delay": 1000}
+          ]
+        },
+        {
+          "wave": 2,
+          "enemies": [
+            {"enemyId": "enemy.zombie", "delay": 0},
+            {"enemyId": "enemy.zombie", "delay": 1000},
+            {"enemyId": "enemy.zombie", "delay": 1000},
+            {"enemyId": "enemy.zombie", "delay": 1000},
+            {"enemyId": "enemy.zombie", "delay": 1000}
+          ]
+        },
+        {
+          "wave": 3,
+          "enemies": [
+            {"enemyId": "enemy.zombie", "delay": 0},
+            {"enemyId": "enemy.zombie", "delay": 1000},
+            {"enemyId": "enemy.zombie", "delay": 1000},
+            {"enemyId": "enemy.zombie", "delay": 1000},
+            {"enemyId": "enemy.zombie", "delay": 1000},
+            {"enemyId": "enemy.zombie", "delay": 1000},
+            {"enemyId": "enemy.zombie", "delay": 1000},
+            {"enemyId": "enemy.zombie", "delay": 1000}
+          ]
+        }
+      ]
+    },
+    {
+      "x": 14, "y": 14,
+      "spawnPlan": [
+        {
+          "wave": 1,
+          "enemies": [
+            {"enemyId": "enemy.zombie", "delay": 0},
+            {"enemyId": "enemy.zombie", "delay": 1000},
+            {"enemyId": "enemy.zombie", "delay": 1000}
+          ]
+        },
+        {
+          "wave": 2,
+          "enemies": [
+            {"enemyId": "enemy.zombie", "delay": 0},
+            {"enemyId": "enemy.zombie", "delay": 1000},
+            {"enemyId": "enemy.zombie", "delay": 1000},
+            {"enemyId": "enemy.zombie", "delay": 1000},
+            {"enemyId": "enemy.zombie", "delay": 1000}
+          ]
+        },
+        {
+          "wave": 3,
+          "enemies": [
+            {"enemyId": "enemy.zombie", "delay": 0},
+            {"enemyId": "enemy.zombie", "delay": 1000},
+            {"enemyId": "enemy.zombie", "delay": 1000},
+            {"enemyId": "enemy.zombie", "delay": 1000},
+            {"enemyId": "enemy.zombie", "delay": 1000},
+            {"enemyId": "enemy.zombie", "delay": 1000},
+            {"enemyId": "enemy.zombie", "delay": 1000},
+            {"enemyId": "enemy.zombie", "delay": 1000}
+          ]
+        }
+      ]
+    }
+  ]
 }

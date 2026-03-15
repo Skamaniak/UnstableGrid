@@ -1,0 +1,10 @@
+{
+  "id": "enemy.zombie",
+  "name": "Zombie",
+  "description": "A slow-moving undead creature shambling toward the base.",
+  "assetType": "ENEMY",
+  "health": 100,
+  "speed": 1.0,
+  "scrap": 3,
+  "flying": false
+}

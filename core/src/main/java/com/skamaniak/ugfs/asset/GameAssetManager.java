@@ -25,6 +25,7 @@ public class GameAssetManager {
     private final Map<String, Conduit> conduits;
     private final Map<String, Level> level;
     private final Map<String, Terrain> terrains;
+    private final Map<String, Enemy> enemies;
 
     // Textures
     private final Map<String, Texture> textures = new HashMap<>();
@@ -49,6 +50,7 @@ public class GameAssetManager {
         this.conduits = jsonAssetLoader.loadConduits();
         this.level = jsonAssetLoader.loadLevels();
         this.terrains = jsonAssetLoader.loadTerrains();
+        this.enemies = jsonAssetLoader.loadEnemies();
 
         font = new BitmapFont(); //dispose?
         font.setColor(Color.RED);
@@ -96,6 +98,14 @@ public class GameAssetManager {
 
     public Terrain getTerrain(String id) {
         return terrains.get(id);
+    }
+
+    public Enemy getEnemy(String id) {
+        return enemies.get(id);
+    }
+
+    public Collection<Enemy> getEnemies() {
+        return enemies.values();
     }
 
     public Level getLevel(String id) {

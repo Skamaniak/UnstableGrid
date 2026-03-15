@@ -1,5 +1,6 @@
 package com.skamaniak.ugfs.game;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
@@ -8,14 +9,19 @@ import com.skamaniak.ugfs.UnstableGrid;
 import com.skamaniak.ugfs.asset.GameAssetManager;
 import com.skamaniak.ugfs.asset.model.Conduit;
 import com.skamaniak.ugfs.asset.model.Level;
+import com.skamaniak.ugfs.asset.model.Terrain;
+import com.skamaniak.ugfs.asset.model.TerrainType;
 import com.skamaniak.ugfs.game.entity.*;
 import com.skamaniak.ugfs.simulation.PowerConsumer;
 import com.skamaniak.ugfs.simulation.PowerGrid;
 import com.skamaniak.ugfs.simulation.PowerSource;
 
+import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -33,6 +39,13 @@ public class GameState {
     private final Map<String, GameEntity> entityByPosition = new HashMap<>();
     private final Map<String, Level.Tile> tileByPosition = new HashMap<>();
 
+    private final List<EnemyInstance> enemies = new ArrayList<>();
+    private final WaveManager waveManager;
+    private final TilePathfinder pathfinder;
+    private boolean gameOver;
+
+    private final Color healthBarColor = new Color();
+
     private int scrap;
 
     public GameState(UnstableGrid game, Level level) {
@@ -44,6 +57,52 @@ public class GameState {
 
         for (Level.Tile tile : level.getMap()) {
             tileByPosition.put(tileKey(tile.getX(), tile.getY()), tile);
+        }
+
+        // Build terrain grid for pathfinding
+        int w = level.getLevelWidth();
+        int h = level.getLevelHeight();
+        TerrainType[][] terrainGrid = new TerrainType[w][h];
+        for (TerrainType[] col : terrainGrid) Arrays.fill(col, TerrainType.WATER);
+        for (Level.Tile tile : level.getMap()) {
+            Terrain terrain = GameAssetManager.INSTANCE.getTerrain(tile.getTerrainId());
+            terrainGrid[tile.getX()][tile.getY()] = terrain.getTerrainType();
+        }
+        this.pathfinder = new TilePathfinder(terrainGrid, w, h, entityByPosition);
+
+        // Initialize wave manager
+        Level.Position base = level.getBase();
+        if (base != null && level.getWaves() != null) {
+            final int baseX = base.getX();
+            final int baseY = base.getY();
+            this.waveManager = new WaveManager(
+                level.getWaves(),
+                level.getSpawnLocations(),
+                new WaveManager.EnemyLookup() {
+                    @Override
+                    public com.skamaniak.ugfs.asset.model.Enemy getEnemy(String id) {
+                        return GameAssetManager.INSTANCE.getEnemy(id);
+                    }
+                },
+                new WaveManager.PathComputer() {
+                    @Override
+                    public List<Vector2> computePath(Vector2 spawnWorldPos, boolean flying) {
+                        if (flying) {
+                            List<Vector2> flyPath = new ArrayList<>();
+                            flyPath.add(new Vector2(spawnWorldPos));
+                            flyPath.add(new Vector2(
+                                (baseX + 0.5f) * GameConstants.TILE_SIZE_PX,
+                                (baseY + 0.5f) * GameConstants.TILE_SIZE_PX));
+                            return flyPath;
+                        }
+                        int sx = (int) (spawnWorldPos.x / GameConstants.TILE_SIZE_PX);
+                        int sy = (int) (spawnWorldPos.y / GameConstants.TILE_SIZE_PX);
+                        return pathfinder.findPath(sx, sy, baseX, baseY);
+                    }
+                }
+            );
+        } else {
+            this.waveManager = null;
         }
     }
 
@@ -259,14 +318,43 @@ public class GameState {
 
     private void simulateShooting(float delta) {
         for (TowerEntity tower : towers) {
-            if (tower.attemptShot(delta)) {
+            if (tower.attemptShot(delta, enemies)) {
                 GameAssetManager.INSTANCE.loadSound(tower.tower.getShotSound()).play();
             }
         }
     }
 
     private void simulateEnemies(float delta) {
+        if (waveManager != null) {
+            int aliveCount = 0;
+            for (int i = 0, n = enemies.size(); i < n; i++) {
+                if (enemies.get(i).isAlive()) {
+                    aliveCount++;
+                }
+            }
+            List<EnemyInstance> spawned = waveManager.update(delta, aliveCount);
+            enemies.addAll(spawned);
+        }
 
+        for (int i = 0, n = enemies.size(); i < n; i++) {
+            enemies.get(i).move(delta);
+        }
+
+        Iterator<EnemyInstance> it = enemies.iterator();
+        while (it.hasNext()) {
+            EnemyInstance enemy = it.next();
+            if (enemy.hasReachedBase()) {
+                gameOver = true;
+                it.remove();
+            } else if (!enemy.isAlive()) {
+                addScrap(enemy.getEnemy().getScrap());
+                it.remove();
+            }
+        }
+    }
+
+    public boolean isGameOver() {
+        return gameOver;
     }
 
     public void drawTextures(float delta) {
@@ -286,6 +374,49 @@ public class GameState {
         }
         for (TowerEntity tower : towers) {
             tower.drawChevrons(shapeRenderer);
+        }
+
+        // Draw spawn points
+        if (level.getSpawnLocations() != null) {
+            shapeRenderer.setColor(Color.RED);
+            for (Level.SpawnLocation spawn : level.getSpawnLocations()) {
+                float cx = (spawn.getX() + 0.5f) * GameConstants.TILE_SIZE_PX;
+                float cy = (spawn.getY() + 0.5f) * GameConstants.TILE_SIZE_PX;
+                shapeRenderer.circle(cx, cy, 20);
+            }
+        }
+
+        // Draw base
+        Level.Position base = level.getBase();
+        if (base != null) {
+            shapeRenderer.setColor(Color.GREEN);
+            float bx = (base.getX() + 0.5f) * GameConstants.TILE_SIZE_PX;
+            float by = (base.getY() + 0.5f) * GameConstants.TILE_SIZE_PX;
+            shapeRenderer.circle(bx, by, 20);
+        }
+
+        // Draw enemies
+        for (int i = 0, n = enemies.size(); i < n; i++) {
+            EnemyInstance enemy = enemies.get(i);
+            if (!enemy.isAlive()) {
+                continue;
+            }
+            float ex = enemy.getWorldPosition().x;
+            float ey = enemy.getWorldPosition().y;
+
+            // Body
+            shapeRenderer.setColor(Color.ORANGE);
+            shapeRenderer.circle(ex, ey, 16);
+
+            // Health bar background
+            shapeRenderer.setColor(Color.DARK_GRAY);
+            shapeRenderer.rect(ex - 12, ey - 22, 24, 4);
+
+            // Health bar foreground
+            float hf = enemy.getHealthFraction();
+            healthBarColor.set(Color.RED).lerp(Color.GREEN, hf);
+            shapeRenderer.setColor(healthBarColor);
+            shapeRenderer.rect(ex - 12, ey - 22, 24 * hf, 4);
         }
     }
 
