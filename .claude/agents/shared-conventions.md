@@ -35,8 +35,10 @@ If a UI flow opens a menu where all options may be disabled/unaffordable, the pl
 - Any popup menu must dismiss on click-outside via a stage-level `InputListener` that checks `menuTable.hit()` and calls `hide()`.
 - **`hide()` vs `resetSelection()`:** When canceling a mode with a visible popup, call `hide()` (hides + resets state), not just `resetSelection()` (resets state only — leaves zombie popup visible).
 
-### Rule 10: SpriteBatch color contamination
+### Rule 10: Color contamination and `getColor()` aliasing
 If code tints UI actors (e.g. `setColor(red)` for disabled buttons), `draw()` in `GameScreen` must reset `batch.setColor(Color.WHITE)` before `batch.begin()`. The shared batch does NOT reset color between frames.
+
+**Aliasing trap:** In LibGDX, `getColor()` on `BitmapFont`, `SpriteBatch`, and `ShapeRenderer` returns a **live reference** to the internal Color object — not a copy. Saving it with `Color prev = font.getColor()` then calling `font.setColor(Color.YELLOW)` mutates `prev` too. **Fix:** Either call `.cpy()` (`font.getColor().cpy()`) or skip save/restore and unconditionally reset to `Color.WHITE` after the temporary color change.
 
 ### Rule 11: Tinting button styles — use the skin's button drawable, not "white"
 When creating a tinted `TextButtonStyle` (e.g. a light-blue upgrade button or a red disabled button), tint the **existing skin drawable** — not the generic `"white"` drawable. `skin.newDrawable("white", color)` produces a flat rectangle that ignores the skin's nine-patch borders, making the button look visually different (transparent/missing edges). The correct pattern:

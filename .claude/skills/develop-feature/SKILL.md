@@ -98,13 +98,13 @@ After the code review passes and manual test scenarios are printed, ask the user
 
 After all bugs are fixed and the user confirms the feature is complete:
 
-1. Gather all changes made during the bug-fixing loop (Step 7) — bug descriptions, what was fixed, any behavioral adjustments that deviated from the original spec.
+1. Gather only the bugs found during manual testing (Step 7) and any behavioral adjustments that deviated from the original spec. Do NOT include code review blockers from Step 6 — those are implementation-level fixes, not spec-relevant changes.
 
 2. Read the current spec file from `docs/specs/`.
 
 3. Update the spec to reflect the final state of the implementation:
-   - Add a **Bug Fixes** section (after Implementation Steps) documenting each bug found and how it was resolved.
-   - Update any behavioral descriptions in the spec that changed due to bug fixes.
+   - Add a **Bug Fixes** section (after Implementation Steps) documenting each manually-found bug and how it was resolved.
+   - Update any behavioral descriptions or implementation steps in the spec that changed due to bug fixes or implementation deviations.
    - Update the **Testing Plan** section if new regression tests were added.
    - Set the spec **Status** to `Complete`.
 

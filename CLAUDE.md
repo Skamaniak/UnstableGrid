@@ -94,7 +94,7 @@ Priority chain in `selectPlayerAction()`: sell confirm → wire removal request 
 
 ### UI (`ui/`)
 
-Seven Scene2D-based UI elements: `BuildMenu`, `DetailsMenu`, `WiringMenu`, `ContextMenu`, `ScrapHud`, `WaveHud`, `GameOverOverlay`. All share the game's `SpriteBatch`. Each has its own `Stage` registered in an `InputMultiplexer`. `PlayerInput` is first in the multiplexer so game clicks are not consumed by UI stages.
+Eight Scene2D-based UI elements: `BuildMenu`, `DetailsMenu`, `WiringMenu`, `ContextMenu`, `ScrapHud`, `WaveHud`, `GameOverOverlay`, `WireOverlayButton`. All share the game's `SpriteBatch`. Each has its own `Stage` registered in an `InputMultiplexer`. `PlayerInput` is first in the multiplexer so game clicks are not consumed by UI stages.
 
 - **`ContextMenu`** — Right-click popup on structures. Shows Wire, Remove Wire (if outgoing conduits exist), and Sell buttons. Sell uses two-click confirmation. Sets one-shot flags (`wiringRequested`, `wireRemovalRequested`, `sellConfirmed`) read by `selectPlayerAction()`. Opening a new menu cancels both wiring and building via `wiringMenu.resetSelection()` and `buildMenu.resetSelection()`.
 - **`WiringMenu`** — Popup showing conduit types for wiring. Shown by ContextMenu's Wire button. Dismisses on click-outside via stage listener.
