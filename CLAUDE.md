@@ -157,6 +157,8 @@ New features are developed using a multi-agent pipeline invoked with the `/devel
 3. **`implementer`** (Opus) — follows the spec, explores the state machine before coding, checks off steps as it goes, compiles and runs tests before finishing
 4. **`test-generator`** (Sonnet) — writes JUnit 5 + Mockito tests for all new pure-logic code
 5. **`code-reviewer`** (Sonnet) — reviews correctness, performance, and convention adherence; loops back to the implementer if blockers are found
+6. **`Manual testing & bug-squasher`** (interactive) — user manually tests the feature, reports bugs; **`bug-squasher`** (Opus) fixes bugs, writes regression tests, and the code-reviewer re-reviews. Loops until user confirms no more bugs.
+7. **`Spec reconciliation`** — updates the spec with all bug fixes and behavioral adjustments so it matches the final implementation
 
 Agents are defined in `.claude/agents/`. Shared conventions (UI state machine rules, performance rules, testing boundaries) are in `.claude/agents/shared-conventions.md` — this is the single source of truth referenced by all agents. The skill is defined in `.claude/skills/develop-feature/SKILL.md`.
 

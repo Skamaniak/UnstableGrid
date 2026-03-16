@@ -1,6 +1,6 @@
 ---
 name: develop-feature
-description: Full feature development pipeline for Unstable Grid. Runs requirements gathering (interactive) → feature-planner → (manual gate) → implementer → test-generator → code-reviewer in sequence.
+description: Full feature development pipeline for Unstable Grid. Runs requirements gathering (interactive) → feature-planner → (manual gate) → implementer → test-generator → code-reviewer → manual testing & bug-squasher (interactive) → spec reconciliation.
 user-invocable: true
 disable-model-invocation: true
 ---
@@ -73,6 +73,41 @@ Invoke the `test-generator` subagent, passing it the spec file path and the list
 
 Invoke the `code-reviewer` subagent, passing it the spec file path and the list of changed files. Wait for it to finish. Present the full review output to the user.
 
-If the verdict is **Approved** or **Approved with warnings**, the workflow is complete. Summarise what was built and the spec file path. Then read the spec file, extract the **Manual test scenarios** section, and print it to the console so the user can walk through manual verification immediately.
+If the verdict is **Approved** or **Approved with warnings**, the workflow continues to Step 7. Then read the spec file, extract the **Manual test scenarios** section, and print it to the console so the user can walk through manual verification.
 
 If the verdict is **Needs changes**, extract the list of Blockers from the review and pass them to the `implementer` subagent as a fix list (along with the spec file path). Once the implementer finishes, invoke the `test-generator` again for any files it touched, then re-run the `code-reviewer`. Repeat this loop until the verdict is no longer **Needs changes**. After two failed review cycles, stop and present the outstanding blockers to the user for manual resolution rather than looping again.
+
+## Step 7 — Manual testing & bug fixing (interactive loop)
+
+After the code review passes and manual test scenarios are printed, ask the user to manually test the feature in-game. Then enter an interactive bug-fixing loop:
+
+1. **Ask the user:** "Did you find any bugs during manual testing? Describe them and I'll fix them, or confirm everything works to proceed."
+
+2. **If the user reports bugs:**
+   - Compile the bug descriptions into a clear bug list.
+   - Invoke the `bug-squasher` subagent, passing it the spec file path and the bug list. The bug-squasher will fix the bugs, write regression tests for testable fixes, and compile/run tests.
+   - Once the bug-squasher finishes, invoke the `code-reviewer` subagent on the changed files.
+   - If the review has **Blockers**, pass them back to the `bug-squasher` for another fix round (max 2 cycles, then escalate to user).
+   - Report to the user what was fixed and ask again: "Are there any remaining bugs, or is everything working?"
+
+3. **Repeat** step 2 for each round of bugs the user reports. There is no limit on rounds — keep going until the user confirms all bugs are fixed.
+
+4. **When the user confirms no more bugs**, proceed to Step 8.
+
+## Step 8 — Spec reconciliation
+
+After all bugs are fixed and the user confirms the feature is complete:
+
+1. Gather all changes made during the bug-fixing loop (Step 7) — bug descriptions, what was fixed, any behavioral adjustments that deviated from the original spec.
+
+2. Read the current spec file from `docs/specs/`.
+
+3. Update the spec to reflect the final state of the implementation:
+   - Add a **Bug Fixes** section (after Implementation Steps) documenting each bug found and how it was resolved.
+   - Update any behavioral descriptions in the spec that changed due to bug fixes.
+   - Update the **Testing Plan** section if new regression tests were added.
+   - Set the spec **Status** to `Complete`.
+
+4. Print the updated spec to the console so the user can see the final version.
+
+5. Summarise the full workflow: what was built, bugs found and fixed, and the final spec file path.
