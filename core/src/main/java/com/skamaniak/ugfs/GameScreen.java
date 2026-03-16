@@ -25,6 +25,7 @@ import com.skamaniak.ugfs.ui.DetailsMenu;
 import com.skamaniak.ugfs.ui.GameOverOverlay;
 import com.skamaniak.ugfs.ui.ScrapHud;
 import com.skamaniak.ugfs.ui.WaveHud;
+import com.skamaniak.ugfs.ui.WireOverlayButton;
 import com.skamaniak.ugfs.ui.WiringMenu;
 import com.skamaniak.ugfs.view.SceneCamera;
 
@@ -48,6 +49,7 @@ public class GameScreen implements Screen {
     private final ContextMenu contextMenu;
     private final ScrapHud scrapHud;
     private final WaveHud waveHud;
+    private final WireOverlayButton wireOverlayButton;
     private final GameOverOverlay gameOverOverlay;
     private boolean overlayActive;
 
@@ -55,6 +57,7 @@ public class GameScreen implements Screen {
     private final PlayerActionFactory playerActionFactory;
     private PlayerAction pendingPlayerAction;
     private boolean inWireRemovalMode;
+    private boolean wireOverlayForcedOn;
 
     private GameState gameState;
 
@@ -76,6 +79,7 @@ public class GameScreen implements Screen {
         this.contextMenu = new ContextMenu(unstableGrid.batch, gameState, playerInput, wiringMenu, buildMenu);
         this.scrapHud = new ScrapHud(unstableGrid.batch, gameState);
         this.waveHud = new WaveHud(unstableGrid.batch, gameState);
+        this.wireOverlayButton = new WireOverlayButton(unstableGrid.batch);
         this.gameOverOverlay = new GameOverOverlay(unstableGrid.batch, unstableGrid, new Runnable() {
             @Override
             public void run() {
@@ -189,6 +193,12 @@ public class GameScreen implements Screen {
         contextMenu.handleInput();
         scrapHud.handleInput();
         waveHud.handleInput();
+        wireOverlayButton.handleInput();
+        if (wireOverlayForcedOn) {
+            GameConstants.wireOverlayDetailed = true;
+        } else {
+            GameConstants.wireOverlayDetailed = wireOverlayButton.isUserToggleOn();
+        }
 
         pendingPlayerAction.handleMouseMove(playerInput.getMousePosition());
     }
@@ -223,6 +233,7 @@ public class GameScreen implements Screen {
         contextMenu.draw();
         scrapHud.draw();
         waveHud.draw();
+        wireOverlayButton.draw();
     }
 
     private void selectPlayerAction() {
@@ -255,6 +266,8 @@ public class GameScreen implements Screen {
             contextMenu.resetWireRemovalRequested();
             if (entity != null) {
                 inWireRemovalMode = true;
+                wireOverlayForcedOn = true;
+                GameConstants.wireOverlayDetailed = true;
                 pendingPlayerAction = playerActionFactory.wireRemoval(entity, this::onWireRemoved);
             }
             return;
@@ -268,6 +281,8 @@ public class GameScreen implements Screen {
                 if (entity instanceof PowerProducer) {
                     contextMenu.resetWiringRequested();
                     inWireRemovalMode = false;
+                    wireOverlayForcedOn = true;
+                    GameConstants.wireOverlayDetailed = true;
                     pendingPlayerAction = playerActionFactory.wiring(entity, selectedConduit);
                     return;
                 }
@@ -285,6 +300,8 @@ public class GameScreen implements Screen {
             if (playerInput.justClicked(Input.Buttons.RIGHT)) {
                 inWireRemovalMode = false;
             } else {
+                wireOverlayForcedOn = true;
+                GameConstants.wireOverlayDetailed = true;
                 return;
             }
         }
@@ -293,6 +310,8 @@ public class GameScreen implements Screen {
         GameAsset buildAsset = buildMenu.getSelectedAsset();
         if (buildAsset != null) {
             if (!gameState.isBuildingAllowed()) {
+                buildMenu.resetSelection();
+            } else if (playerInput.justClicked(Input.Buttons.RIGHT) || playerInput.isPressed(KeyboardControls.ESCAPE)) {
                 buildMenu.resetSelection();
             } else {
                 wiringMenu.resetSelection();
@@ -309,10 +328,18 @@ public class GameScreen implements Screen {
             } else {
                 GameEntity wiringSource = contextMenu.getTargetEntity();
                 if (wiringSource instanceof PowerProducer) {
+                    wireOverlayForcedOn = true;
+                    GameConstants.wireOverlayDetailed = true;
                     pendingPlayerAction = playerActionFactory.wiring(wiringSource, wiringConduit);
                     return;
                 }
             }
+        }
+
+        // Exiting wiring/wire-removal — restore user's wire overlay toggle
+        if (wireOverlayForcedOn) {
+            wireOverlayForcedOn = false;
+            GameConstants.wireOverlayDetailed = wireOverlayButton.isUserToggleOn();
         }
 
         // Default
@@ -340,7 +367,8 @@ public class GameScreen implements Screen {
             || hitTestStage(contextMenu.getStage(), screenX, screenY)
             || hitTestStage(wiringMenu.getStage(), screenX, screenY)
             || hitTestStage(waveHud.getStage(), screenX, screenY)
-            || hitTestStage(gameOverOverlay.getStage(), screenX, screenY);
+            || hitTestStage(gameOverOverlay.getStage(), screenX, screenY)
+            || hitTestStage(wireOverlayButton.getStage(), screenX, screenY);
     }
 
     private boolean hitTestStage(Stage stage, float screenX, float screenY) {
@@ -350,13 +378,11 @@ public class GameScreen implements Screen {
 
     private void buildGameObject(Vector2 position, GameAsset asset) {
         if (!gameState.spendScrap(asset.getBuildCost())) {
-            buildMenu.resetSelection();
             return;
         }
         Vector2 entityPosition = NavigationUtils.meshVectorFromWorldVector(position);
         GameEntity newEntity = gameEntityFactory.createEntity(entityPosition, asset);
         gameState.registerEntity(newEntity);
-        buildMenu.resetSelection();
     }
 
     @Override
@@ -368,6 +394,7 @@ public class GameScreen implements Screen {
         contextMenu.resize(width, height);
         scrapHud.resize(width, height);
         waveHud.resize(width, height);
+        wireOverlayButton.resize(width, height);
         gameOverOverlay.resize(width, height);
     }
 
@@ -382,6 +409,7 @@ public class GameScreen implements Screen {
         multiplexer.addProcessor(wiringMenu.getStage());
         multiplexer.addProcessor(scrapHud.getStage());
         multiplexer.addProcessor(waveHud.getStage());
+        multiplexer.addProcessor(wireOverlayButton.getStage());
         Gdx.input.setInputProcessor(multiplexer);
     }
 
@@ -409,6 +437,7 @@ public class GameScreen implements Screen {
         contextMenu.dispose();
         scrapHud.dispose();
         waveHud.dispose();
+        wireOverlayButton.dispose();
         gameOverOverlay.dispose();
     }
 }

@@ -14,6 +14,8 @@ import com.skamaniak.ugfs.asset.model.Terrain;
 import com.skamaniak.ugfs.game.GameState;
 import com.skamaniak.ugfs.game.entity.ConduitEntity;
 import com.skamaniak.ugfs.game.entity.GameEntity;
+import com.skamaniak.ugfs.game.entity.PowerStorageEntity;
+import com.skamaniak.ugfs.game.entity.TowerEntity;
 import com.skamaniak.ugfs.input.PlayerInput;
 import com.skamaniak.ugfs.simulation.PowerConsumer;
 import com.skamaniak.ugfs.simulation.PowerSource;
@@ -61,6 +63,7 @@ public class PlayerActionFactory {
 
     private static class Wiring implements PlayerAction {
         private static final Color CIRCLE_COLOR = new Color(0f, 1f, 0f, 0.25f);
+        private static final Color TARGET_COLOR = new Color(0f, 0.8f, 1f, 0.5f);
         private final GameState gameState;
         private final PlayerInput input;
         private final Runnable onWireCreated;
@@ -115,6 +118,23 @@ public class PlayerActionFactory {
             shapeRenderer.setColor(CIRCLE_COLOR);
             shapeRenderer.circle(x, y, radius);
 
+            // Draw target indicators on valid PowerConsumer entities within range
+            shapeRenderer.setColor(TARGET_COLOR);
+            for (PowerStorageEntity storage : gameState.getStorages()) {
+                if (storage != source && isWithinRange(storage)) {
+                    float cx = storage.getPosition().x * GameAssetManager.TILE_SIZE_PX + offset;
+                    float cy = storage.getPosition().y * GameAssetManager.TILE_SIZE_PX + offset;
+                    shapeRenderer.circle(cx, cy, offset);
+                }
+            }
+            for (TowerEntity tower : gameState.getTowers()) {
+                if (tower != source && isWithinRange(tower)) {
+                    float cx = tower.getPosition().x * GameAssetManager.TILE_SIZE_PX + offset;
+                    float cy = tower.getPosition().y * GameAssetManager.TILE_SIZE_PX + offset;
+                    shapeRenderer.circle(cx, cy, offset);
+                }
+            }
+
             Vector2 mousePosition = input.getMousePosition();
             float distance = mousePosition.dst(x, y);
             if (distance > radius) {
@@ -142,7 +162,7 @@ public class PlayerActionFactory {
 
         @Override
         public void handleClick(Vector2 mousePosition) {
-            if (isBuildable(mousePosition)) {
+            if (isBuildable(mousePosition) && gameState.getScrap() >= assetToBuild.getBuildCost()) {
                 build.accept(mousePosition, assetToBuild);
             }
         }
@@ -163,7 +183,7 @@ public class PlayerActionFactory {
         public void handleMouseMove(Vector2 mousePosition) {
             this.mousePosition = mousePosition;
 
-            if (isBuildable(mousePosition)) {
+            if (isBuildable(mousePosition) && gameState.getScrap() >= assetToBuild.getBuildCost()) {
                 texture = "assets/visual/valid-selection.png";
             } else {
                 texture = "assets/visual/invalid-selection.png";
@@ -173,9 +193,18 @@ public class PlayerActionFactory {
         @Override
         public void drawTextures(SpriteBatch batch) {
             if (mousePosition != null && texture != null) {
-                batch.draw(GameAssetManager.INSTANCE.loadTexture(texture),
-                    NavigationUtils.alignCoordinateWithMesh(mousePosition.x),
-                    NavigationUtils.alignCoordinateWithMesh(mousePosition.y));
+                float tileX = NavigationUtils.alignCoordinateWithMesh(mousePosition.x);
+                float tileY = NavigationUtils.alignCoordinateWithMesh(mousePosition.y);
+                batch.draw(GameAssetManager.INSTANCE.loadTexture(texture), tileX, tileY);
+
+                int cost = assetToBuild.getBuildCost();
+                if (texture.contains("invalid")) {
+                    GameAssetManager.INSTANCE.getFont().setColor(Color.RED);
+                } else {
+                    GameAssetManager.INSTANCE.getFont().setColor(Color.WHITE);
+                }
+                GameAssetManager.INSTANCE.getFont().draw(batch, "-" + cost, tileX + 4, tileY - 4);
+                GameAssetManager.INSTANCE.getFont().setColor(Color.WHITE);
             }
         }
 

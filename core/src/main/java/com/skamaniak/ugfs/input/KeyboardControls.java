@@ -12,7 +12,8 @@ public enum KeyboardControls {
     DEBUG_SHOW_FPS(Z),
 
     CAMERA_ZOOM_IN(E),
-    CAMERA_ZOOM_OUT(Q);
+    CAMERA_ZOOM_OUT(Q),
+    ESCAPE(com.badlogic.gdx.Input.Keys.ESCAPE);
 
     private final Set<Integer> keys;
 

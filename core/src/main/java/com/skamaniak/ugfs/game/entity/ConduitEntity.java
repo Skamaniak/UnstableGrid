@@ -5,6 +5,8 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.graphics.Color;
+import com.skamaniak.ugfs.GameConstants;
 import com.skamaniak.ugfs.asset.GameAssetManager;
 import com.skamaniak.ugfs.asset.model.Conduit;
 import com.skamaniak.ugfs.simulation.PowerConsumer;
@@ -117,7 +119,12 @@ public class ConduitEntity implements PowerConsumer, Drawable {
         float dy = y2 - y1;
         float length = (float) Math.sqrt(dx * dx + dy * dy); // Calculate the line's length
         float angle = (float) Math.atan2(dy, dx) * (180 / (float) Math.PI); // Calculate the angle in degrees
-        float thickness = conduit.getLineThickness();
+        boolean detailed = GameConstants.wireOverlayDetailed;
+        float thickness = detailed ? conduit.getLineThickness() : conduit.getLineThickness() * 0.5f;
+
+        if (!detailed) {
+            batch.setColor(1f, 1f, 1f, 0.3f);
+        }
 
         // Adjust the texture region's width in UV space to repeat the texture
         TextureRegion textureRegion = GameAssetManager.INSTANCE.loadRepeatingTexture(conduit.getTexture());
@@ -131,9 +138,13 @@ public class ConduitEntity implements PowerConsumer, Drawable {
             1, 1,                       // Scale
             angle                       // Rotation angle
         );
-        float transferCapacityUsed = lastPowerTransferred * 100 / (conduit.getPowerTransferRate() * Gdx.graphics.getDeltaTime());
 
-        GameAssetManager.INSTANCE.getFont().draw(batch, Math.round(transferCapacityUsed) + "%", x1 + (dx/2), y1 + (dy/2));
+        if (!detailed) {
+            batch.setColor(Color.WHITE);
+        } else {
+            float transferCapacityUsed = lastPowerTransferred * 100 / (conduit.getPowerTransferRate() * Gdx.graphics.getDeltaTime());
+            GameAssetManager.INSTANCE.getFont().draw(batch, Math.round(transferCapacityUsed) + "%", x1 + (dx/2), y1 + (dy/2));
+        }
     }
 }
 

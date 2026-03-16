@@ -46,6 +46,7 @@ public class GameState {
     private boolean victory;
 
     private final Color healthBarColor = new Color();
+    private final Map<GameEntity, int[]> wireCountCache = new HashMap<>();
 
     private int scrap;
 
@@ -305,6 +306,22 @@ public class GameState {
         return total;
     }
 
+    public Set<GeneratorEntity> getGenerators() {
+        return generators;
+    }
+
+    public Set<PowerStorageEntity> getStorages() {
+        return storages;
+    }
+
+    public Set<TowerEntity> getTowers() {
+        return towers;
+    }
+
+    public Set<ConduitEntity> getConduits() {
+        return conduits;
+    }
+
     public void readInputs() {
         // TODO read inputs
     }
@@ -502,6 +519,47 @@ public class GameState {
         for (TowerEntity tower : towers) {
             tower.draw(game.batch);
         }
+
+        if (GameConstants.wireOverlayDetailed) {
+            drawWireCountBadges();
+        }
+    }
+
+    private void drawWireCountBadges() {
+        // Compute wire counts in a single pass over conduits
+        for (int[] count : wireCountCache.values()) {
+            count[0] = 0;
+        }
+        for (ConduitEntity conduit : conduits) {
+            if (conduit.from instanceof GameEntity) {
+                incrementWireCount((GameEntity) conduit.from);
+            }
+            if (conduit.to instanceof GameEntity) {
+                incrementWireCount((GameEntity) conduit.to);
+            }
+        }
+        // Draw badges
+        com.badlogic.gdx.graphics.g2d.BitmapFont font = GameAssetManager.INSTANCE.getFont();
+        font.setColor(com.badlogic.gdx.graphics.Color.YELLOW);
+        for (Map.Entry<GameEntity, int[]> entry : wireCountCache.entrySet()) {
+            int count = entry.getValue()[0];
+            if (count > 0) {
+                GameEntity entity = entry.getKey();
+                float x = entity.getPosition().x * GameConstants.TILE_SIZE_PX + 2;
+                float y = (entity.getPosition().y + 1) * GameConstants.TILE_SIZE_PX - 2;
+                font.draw(game.batch, Integer.toString(count), x, y);
+            }
+        }
+        font.setColor(com.badlogic.gdx.graphics.Color.WHITE);
+    }
+
+    private void incrementWireCount(GameEntity entity) {
+        int[] count = wireCountCache.get(entity);
+        if (count == null) {
+            count = new int[]{0};
+            wireCountCache.put(entity, count);
+        }
+        count[0]++;
     }
 
 }
