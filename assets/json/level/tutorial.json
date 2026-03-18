@@ -15,8 +15,8 @@
     {"x": 4, "y": 15, "terrainId": "terrain.water-clay", "tileNumber": 0, "variant": 1},
     {"x": 5, "y": 15, "terrainId": "terrain.water-clay", "tileNumber": 0, "variant": 1},
     {"x": 6, "y": 15, "terrainId": "terrain.water-clay", "tileNumber": 10, "variant": 1},
-    {"x": 7, "y": 15, "terrainId": "terrain.clay", "tileNumber": 4, "variant": 0},
-    {"x": 8, "y": 15, "terrainId": "terrain.clay", "tileNumber": 4, "variant": 1},
+    {"x": 7, "y": 15, "terrainId": "terrain.internal", "tileNumber": 0, "variant": 0},
+    {"x": 8, "y": 15, "terrainId": "terrain.internal", "tileNumber": 0, "variant": 0},
     {"x": 9, "y": 15, "terrainId": "terrain.water-clay", "tileNumber": 11, "variant": 0},
     {"x": 10, "y": 15, "terrainId": "terrain.water-clay", "tileNumber": 0, "variant": 1},
     {"x": 11, "y": 15, "terrainId": "terrain.water-clay", "tileNumber": 0, "variant": 0},
@@ -25,7 +25,7 @@
     {"x": 14, "y": 15, "terrainId": "terrain.water-clay", "tileNumber": 0, "variant": 1},
     {"x": 15, "y": 15, "terrainId": "terrain.water-clay", "tileNumber": 7, "variant": 0},
     {"x": 0, "y": 14, "terrainId": "terrain.water-clay", "tileNumber": 3, "variant": 1},
-    {"x": 1, "y": 14, "terrainId": "terrain.internal", "tileNumber": 1, "variant": 0},
+    {"x": 1, "y": 14, "terrainId": "terrain.clay", "tileNumber": 5, "variant": 1},
     {"x": 2, "y": 14, "terrainId": "terrain.clay", "tileNumber": 5, "variant": 1},
     {"x": 3, "y": 14, "terrainId": "terrain.clay", "tileNumber": 5, "variant": 1},
     {"x": 4, "y": 14, "terrainId": "terrain.clay", "tileNumber": 5, "variant": 1},
@@ -38,7 +38,7 @@
     {"x": 11, "y": 14, "terrainId": "terrain.clay", "tileNumber": 4, "variant": 1},
     {"x": 12, "y": 14, "terrainId": "terrain.clay", "tileNumber": 5, "variant": 1},
     {"x": 13, "y": 14, "terrainId": "terrain.clay", "tileNumber": 5, "variant": 1},
-    {"x": 14, "y": 14, "terrainId": "terrain.internal", "tileNumber": 1, "variant": 0},
+    {"x": 14, "y": 14, "terrainId": "terrain.clay", "tileNumber": 5, "variant": 1},
     {"x": 15, "y": 14, "terrainId": "terrain.water-clay", "tileNumber": 1, "variant": 0},
     {"x": 0, "y": 13, "terrainId": "terrain.water-clay", "tileNumber": 3, "variant": 0},
     {"x": 1, "y": 13, "terrainId": "terrain.clay", "tileNumber": 5, "variant": 1},
@@ -128,7 +128,7 @@
     {"x": 5, "y": 8, "terrainId": "terrain.clay", "tileNumber": 5, "variant": 1},
     {"x": 6, "y": 8, "terrainId": "terrain.clay", "tileNumber": 4, "variant": 0},
     {"x": 7, "y": 8, "terrainId": "terrain.clay", "tileNumber": 5, "variant": 1},
-    {"x": 8, "y": 8, "terrainId": "terrain.internal", "tileNumber": 1, "variant": 1},
+    {"x": 8, "y": 8, "terrainId": "terrain.clay", "tileNumber": 5, "variant": 1},
     {"x": 9, "y": 8, "terrainId": "terrain.clay", "tileNumber": 5, "variant": 1},
     {"x": 10, "y": 8, "terrainId": "terrain.clay", "tileNumber": 5, "variant": 1},
     {"x": 11, "y": 8, "terrainId": "terrain.clay", "tileNumber": 5, "variant": 1},
@@ -205,7 +205,7 @@
     {"x": 2, "y": 3, "terrainId": "terrain.clay", "tileNumber": 5, "variant": 1},
     {"x": 3, "y": 3, "terrainId": "terrain.water-clay", "tileNumber": 12, "variant": 1},
     {"x": 4, "y": 3, "terrainId": "terrain.water-clay", "tileNumber": 9, "variant": 0},
-    {"x": 5, "y": 3, "terrainId": "terrain.clay", "tileNumber": 5, "variant": 1},
+    {"x": 5, "y": 3, "terrainId": "terrain.internal", "tileNumber": 0, "variant": 1},
     {"x": 6, "y": 3, "terrainId": "terrain.water-clay", "tileNumber": 12, "variant": 0},
     {"x": 7, "y": 3, "terrainId": "terrain.water-clay", "tileNumber": 2, "variant": 0},
     {"x": 8, "y": 3, "terrainId": "terrain.water-clay", "tileNumber": 2, "variant": 0},
@@ -264,7 +264,7 @@
     {"x": 13, "y": 0, "terrainId": "terrain.water-clay", "tileNumber": 2, "variant": 0},
     {"x": 14, "y": 0, "terrainId": "terrain.water-clay", "tileNumber": 2, "variant": 0},
     {"x": 15, "y": 0, "terrainId": "terrain.water-clay", "tileNumber": 8, "variant": 1}],
-  "base": {"x": 8, "y": 8},
+  "base": {"x": 5, "y": 3},
   "waves": [
     {"wave": 1, "delay": 30.0},
     {"wave": 2, "delay": 60.0},
@@ -272,7 +272,7 @@
   ],
   "spawnLocations": [
     {
-      "x": 1, "y": 14,
+      "x": 7, "y": 15,
       "spawnPlan": [
         {
           "wave": 1,
@@ -308,7 +308,7 @@
       ]
     },
     {
-      "x": 14, "y": 14,
+      "x": 8, "y": 15,
       "spawnPlan": [
         {
           "wave": 1,
@@ -321,23 +321,23 @@
         {
           "wave": 2,
           "enemies": [
-            {"enemyId": "enemy.zombie", "delay": 0},
-            {"enemyId": "enemy.zombie", "delay": 1000},
-            {"enemyId": "enemy.zombie", "delay": 1000},
-            {"enemyId": "enemy.zombie", "delay": 1000},
-            {"enemyId": "enemy.zombie", "delay": 1000}
+            {"enemyId": "enemy.zombird", "delay": 0},
+            {"enemyId": "enemy.zombird", "delay": 2000},
+            {"enemyId": "enemy.zombird", "delay": 2000},
+            {"enemyId": "enemy.zombird", "delay": 2000},
+            {"enemyId": "enemy.zombird", "delay": 2000}
           ]
         },
         {
           "wave": 3,
           "enemies": [
-            {"enemyId": "enemy.zombie", "delay": 0},
+            {"enemyId": "enemy.zombird", "delay": 0},
             {"enemyId": "enemy.zombie", "delay": 1000},
+            {"enemyId": "enemy.zombird", "delay": 1000},
             {"enemyId": "enemy.zombie", "delay": 1000},
+            {"enemyId": "enemy.zombird", "delay": 1000},
             {"enemyId": "enemy.zombie", "delay": 1000},
-            {"enemyId": "enemy.zombie", "delay": 1000},
-            {"enemyId": "enemy.zombie", "delay": 1000},
-            {"enemyId": "enemy.zombie", "delay": 1000},
+            {"enemyId": "enemy.zombird", "delay": 1000},
             {"enemyId": "enemy.zombie", "delay": 1000}
           ]
         }

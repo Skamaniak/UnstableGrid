@@ -89,54 +89,6 @@ public class GameScreen implements Screen {
 
         this.playerActionFactory = new PlayerActionFactory(gameState, playerInput, this::showGameObjectDetails, this::buildGameObject, this::onWireCreated);
         this.pendingPlayerAction = playerActionFactory.detailsSelection();
-
-        populateGameStateWithDummyData();
-    }
-
-    private void populateGameStateWithDummyData() {
-        Generator solarGenerator = GameAssetManager.INSTANCE.getGenerator("generator.solar-panel");
-        GeneratorEntity generatorSolarPanel1 = new GeneratorEntity(new Vector2(4, 10), solarGenerator);
-        gameState.registerGenerator(generatorSolarPanel1);
-
-        GeneratorEntity generatorSolarPanel2 = new GeneratorEntity(new Vector2(4, 8), solarGenerator);
-        gameState.registerGenerator(generatorSolarPanel2);
-
-        GeneratorEntity generatorSolarPanel3 = new GeneratorEntity(new Vector2(4, 6), solarGenerator);
-        gameState.registerGenerator(generatorSolarPanel3);
-
-        GeneratorEntity generatorSolarPanel4 = new GeneratorEntity(new Vector2(4, 4), solarGenerator);
-        gameState.registerGenerator(generatorSolarPanel4);
-
-        Generator waterGenerator = GameAssetManager.INSTANCE.getGenerator("generator.water");
-        GeneratorEntity waterGenerator1 = new GeneratorEntity(new Vector2(4, 2), waterGenerator);
-        gameState.registerGenerator(waterGenerator1);
-
-        PowerStorage storageCapacitor = GameAssetManager.INSTANCE.getPowerStorage("power-storage.capacitor");
-        PowerStorageEntity storageEntity = new PowerStorageEntity(new Vector2(7, 6), storageCapacitor);
-        gameState.registerPowerStorage(storageEntity);
-
-        PowerStorage storageBattery = GameAssetManager.INSTANCE.getPowerStorage("power-storage.battery");
-        PowerStorageEntity storageEntity2 = new PowerStorageEntity(new Vector2(7, 4), storageBattery);
-        gameState.registerPowerStorage(storageEntity2);
-
-        Tower towerTesla = GameAssetManager.INSTANCE.getTower("tower.tesla");
-        TowerEntity towerEntity = new TowerEntity(new Vector2(10, 6), towerTesla);
-        gameState.registerTower(towerEntity);
-
-        Tower towerLaser = GameAssetManager.INSTANCE.getTower("tower.laser");
-        TowerEntity towerEntity2 = new TowerEntity(new Vector2(10, 10), towerLaser);
-        gameState.registerTower(towerEntity2);
-
-        Conduit conduitCopper = GameAssetManager.INSTANCE.getConduit("conduit.copper-wire");
-        Conduit conduitAcsr = GameAssetManager.INSTANCE.getConduit("conduit.acsr");
-        gameState.registerLinkFree(conduitCopper, generatorSolarPanel1, towerEntity2);
-        gameState.registerLinkFree(conduitCopper, generatorSolarPanel2, storageEntity);
-        gameState.registerLinkFree(conduitCopper, generatorSolarPanel3, storageEntity);
-        gameState.registerLinkFree(conduitCopper, generatorSolarPanel4, storageEntity);
-        gameState.registerLinkFree(conduitCopper, generatorSolarPanel4, storageEntity2);
-        gameState.registerLinkFree(conduitAcsr, waterGenerator1, storageEntity2);
-        gameState.registerLinkFree(conduitCopper, storageEntity2, towerEntity);
-        gameState.registerLinkFree(conduitCopper, storageEntity, towerEntity2);
     }
 
     @Override

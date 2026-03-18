@@ -12,13 +12,13 @@
   "levels": [
     {
       "level": 1,
-      "powerStorage": 1,
-      "powerCostShot": 1,
-      "powerLossStandby": 1,
-      "towerRange": 1,
-      "fireRate": 1,
-      "damage": 1,
-      "scrapCost": 1
+      "powerStorage": 5000,
+      "powerCostShot": 2500,
+      "powerLossStandby": 10,
+      "towerRange": 6,
+      "fireRate": 0.1,
+      "damage": 250,
+      "scrapCost": 250
     }
   ]
 }

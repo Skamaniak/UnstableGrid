@@ -16,8 +16,8 @@
       "powerCostShot": 20,
       "powerLossStandby": 1,
       "towerRange": 4,
-      "fireRate": 1,
-      "damage": 10,
+      "fireRate": 5,
+      "damage": 1,
       "scrapCost": 50
     }
   ]
