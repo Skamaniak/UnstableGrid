@@ -1,10 +1,13 @@
 {
   "id": "enemy.zombird",
-  "name": "Zombie",
+  "name": "Zombird",
   "description": "A fast-moving undead creature flying toward the base.",
   "assetType": "ENEMY",
   "health": 5,
   "speed": 2.0,
   "scrap": 10,
-  "flying": true
+  "flying": true,
+  "shape": "triangle",
+  "color": [0.5, 0.8, 1.0],
+  "radius": 12
 }

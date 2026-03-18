@@ -1,0 +1,13 @@
+{
+  "id": "enemy.harpy",
+  "name": "Harpy",
+  "description": "A large winged predator that flies directly to the base. Tougher than a zombird.",
+  "assetType": "ENEMY",
+  "health": 25,
+  "speed": 1.5,
+  "scrap": 15,
+  "flying": true,
+  "shape": "triangle",
+  "color": [0.0, 0.9, 0.9],
+  "radius": 18
+}

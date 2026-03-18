@@ -8,6 +8,7 @@ import com.skamaniak.ugfs.GameConstants;
 import com.skamaniak.ugfs.UnstableGrid;
 import com.skamaniak.ugfs.asset.GameAssetManager;
 import com.skamaniak.ugfs.asset.model.Conduit;
+import com.skamaniak.ugfs.asset.model.Enemy;
 import com.skamaniak.ugfs.asset.model.Level;
 import com.skamaniak.ugfs.asset.model.Terrain;
 import com.skamaniak.ugfs.asset.model.TerrainType;
@@ -538,20 +539,34 @@ public class GameState {
             }
             float ex = enemy.getWorldPosition().x;
             float ey = enemy.getWorldPosition().y;
+            Enemy enemyAsset = enemy.getEnemy();
+            float[] color = enemyAsset.getColor();
+            int radius = enemyAsset.getRadius();
 
             // Body
-            shapeRenderer.setColor(Color.ORANGE);
-            shapeRenderer.circle(ex, ey, 16);
+            shapeRenderer.setColor(color[0], color[1], color[2], 1f);
+            if ("triangle".equals(enemyAsset.getShape())) {
+                float halfBase = radius * 0.866f;
+                float topY = ey + radius;
+                float bottomY = ey - radius * 0.5f;
+                shapeRenderer.triangle(
+                    ex - halfBase, bottomY,
+                    ex + halfBase, bottomY,
+                    ex, topY);
+            } else {
+                shapeRenderer.circle(ex, ey, radius);
+            }
 
             // Health bar background
+            float barOffset = radius + 4;
             shapeRenderer.setColor(Color.DARK_GRAY);
-            shapeRenderer.rect(ex - 12, ey - 22, 24, 4);
+            shapeRenderer.rect(ex - 12, ey - barOffset - 4, 24, 4);
 
             // Health bar foreground
             float hf = enemy.getHealthFraction();
             healthBarColor.set(Color.RED).lerp(Color.GREEN, hf);
             shapeRenderer.setColor(healthBarColor);
-            shapeRenderer.rect(ex - 12, ey - 22, 24 * hf, 4);
+            shapeRenderer.rect(ex - 12, ey - barOffset - 4, 24 * hf, 4);
         }
 
         // Draw visual effects

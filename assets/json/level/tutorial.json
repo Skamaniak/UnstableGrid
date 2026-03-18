@@ -279,30 +279,33 @@
           "enemies": [
             {"enemyId": "enemy.zombie", "delay": 0},
             {"enemyId": "enemy.zombie", "delay": 1000},
+            {"enemyId": "enemy.zombie", "delay": 1000},
+            {"enemyId": "enemy.zombie", "delay": 1000},
             {"enemyId": "enemy.zombie", "delay": 1000}
           ]
         },
         {
           "wave": 2,
           "enemies": [
-            {"enemyId": "enemy.zombie", "delay": 0},
-            {"enemyId": "enemy.zombie", "delay": 1000},
-            {"enemyId": "enemy.zombie", "delay": 1000},
-            {"enemyId": "enemy.zombie", "delay": 1000},
-            {"enemyId": "enemy.zombie", "delay": 1000}
+            {"enemyId": "enemy.runner", "delay": 0},
+            {"enemyId": "enemy.runner", "delay": 1000},
+            {"enemyId": "enemy.runner", "delay": 1000},
+            {"enemyId": "enemy.crawler", "delay": 2000},
+            {"enemyId": "enemy.crawler", "delay": 2000}
           ]
         },
         {
           "wave": 3,
           "enemies": [
             {"enemyId": "enemy.zombie", "delay": 0},
-            {"enemyId": "enemy.zombie", "delay": 1000},
-            {"enemyId": "enemy.zombie", "delay": 1000},
-            {"enemyId": "enemy.zombie", "delay": 1000},
-            {"enemyId": "enemy.zombie", "delay": 1000},
-            {"enemyId": "enemy.zombie", "delay": 1000},
-            {"enemyId": "enemy.zombie", "delay": 1000},
-            {"enemyId": "enemy.zombie", "delay": 1000}
+            {"enemyId": "enemy.zombie", "delay": 800},
+            {"enemyId": "enemy.zombie", "delay": 800},
+            {"enemyId": "enemy.zombie", "delay": 800},
+            {"enemyId": "enemy.runner", "delay": 1000},
+            {"enemyId": "enemy.runner", "delay": 1000},
+            {"enemyId": "enemy.crawler", "delay": 2000},
+            {"enemyId": "enemy.crawler", "delay": 2000},
+            {"enemyId": "enemy.golem", "delay": 3000}
           ]
         }
       ]
@@ -313,32 +316,32 @@
         {
           "wave": 1,
           "enemies": [
-            {"enemyId": "enemy.zombie", "delay": 0},
-            {"enemyId": "enemy.zombie", "delay": 1000},
-            {"enemyId": "enemy.zombie", "delay": 1000}
+            {"enemyId": "enemy.zombird", "delay": 0},
+            {"enemyId": "enemy.zombird", "delay": 2000},
+            {"enemyId": "enemy.zombird", "delay": 2000}
           ]
         },
         {
           "wave": 2,
           "enemies": [
             {"enemyId": "enemy.zombird", "delay": 0},
-            {"enemyId": "enemy.zombird", "delay": 2000},
-            {"enemyId": "enemy.zombird", "delay": 2000},
-            {"enemyId": "enemy.zombird", "delay": 2000},
-            {"enemyId": "enemy.zombird", "delay": 2000}
+            {"enemyId": "enemy.zombird", "delay": 1500},
+            {"enemyId": "enemy.zombird", "delay": 1500},
+            {"enemyId": "enemy.harpy", "delay": 2000},
+            {"enemyId": "enemy.harpy", "delay": 2000}
           ]
         },
         {
           "wave": 3,
           "enemies": [
             {"enemyId": "enemy.zombird", "delay": 0},
-            {"enemyId": "enemy.zombie", "delay": 1000},
-            {"enemyId": "enemy.zombird", "delay": 1000},
-            {"enemyId": "enemy.zombie", "delay": 1000},
-            {"enemyId": "enemy.zombird", "delay": 1000},
-            {"enemyId": "enemy.zombie", "delay": 1000},
-            {"enemyId": "enemy.zombird", "delay": 1000},
-            {"enemyId": "enemy.zombie", "delay": 1000}
+            {"enemyId": "enemy.zombird", "delay": 1500},
+            {"enemyId": "enemy.zombird", "delay": 1500},
+            {"enemyId": "enemy.harpy", "delay": 2000},
+            {"enemyId": "enemy.harpy", "delay": 2000},
+            {"enemyId": "enemy.runner", "delay": 1000},
+            {"enemyId": "enemy.runner", "delay": 1000},
+            {"enemyId": "enemy.runner", "delay": 1000}
           ]
         }
       ]

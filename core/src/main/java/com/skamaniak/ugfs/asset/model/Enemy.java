@@ -5,6 +5,9 @@ public class Enemy extends GameAsset {
     private float speed;
     private int scrap;
     private boolean flying;
+    private String shape;
+    private float[] color;
+    private int radius;
 
     public int getHealth() {
         return health;
@@ -20,5 +23,17 @@ public class Enemy extends GameAsset {
 
     public boolean isFlying() {
         return flying;
+    }
+
+    public String getShape() {
+        return shape;
+    }
+
+    public float[] getColor() {
+        return color;
+    }
+
+    public int getRadius() {
+        return radius;
     }
 }

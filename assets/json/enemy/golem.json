@@ -1,0 +1,13 @@
+{
+  "id": "enemy.golem",
+  "name": "Golem",
+  "description": "An enormous stone construct with devastating resilience. The heaviest ground threat.",
+  "assetType": "ENEMY",
+  "health": 200,
+  "speed": 0.3,
+  "scrap": 25,
+  "flying": false,
+  "shape": "circle",
+  "color": [0.7, 0.1, 0.1],
+  "radius": 24
+}

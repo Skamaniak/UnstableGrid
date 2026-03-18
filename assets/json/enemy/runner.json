@@ -1,0 +1,13 @@
+{
+  "id": "enemy.runner",
+  "name": "Runner",
+  "description": "A nimble creature that sprints past defenses. Low health but hard to catch.",
+  "assetType": "ENEMY",
+  "health": 6,
+  "speed": 3.0,
+  "scrap": 5,
+  "flying": false,
+  "shape": "circle",
+  "color": [1.0, 1.0, 0.2],
+  "radius": 10
+}

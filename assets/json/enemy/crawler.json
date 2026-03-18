@@ -1,0 +1,13 @@
+{
+  "id": "enemy.crawler",
+  "name": "Crawler",
+  "description": "A massive armored creature that slowly crawls toward the base. Extremely tough.",
+  "assetType": "ENEMY",
+  "health": 50,
+  "speed": 0.5,
+  "scrap": 8,
+  "flying": false,
+  "shape": "circle",
+  "color": [0.6, 0.4, 0.2],
+  "radius": 18
+}
