@@ -8,6 +8,7 @@
   "shotSound": "audio/sound/tower/emp.ogg",
   "damageType": "emp",
   "targeting": "aoe",
+  "canTargetFlying": false,
   "buildableOn": ["LAND"],
   "levels": [
     {
@@ -15,10 +16,30 @@
       "powerStorage": 5000,
       "powerCostShot": 2500,
       "powerLossStandby": 10,
-      "towerRange": 6,
+      "towerRange": 4,
       "fireRate": 0.1,
       "damage": 250,
       "scrapCost": 250
+    },
+    {
+      "level": 2,
+      "powerStorage": 6500,
+      "powerCostShot": 3000,
+      "powerLossStandby": 12,
+      "towerRange": 4.5,
+      "fireRate": 0.12,
+      "damage": 400,
+      "scrapCost": 400
+    },
+    {
+      "level": 3,
+      "powerStorage": 8000,
+      "powerCostShot": 3500,
+      "powerLossStandby": 15,
+      "towerRange": 5,
+      "fireRate": 0.15,
+      "damage": 600,
+      "scrapCost": 550
     }
   ]
 }

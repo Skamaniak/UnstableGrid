@@ -8,17 +8,38 @@
   "shotSound": "audio/sound/tower/microwave.ogg",
   "damageType": "electricity",
   "targeting": "aoe",
+  "canTargetFlying": false,
   "buildableOn": ["LAND"],
   "levels": [
     {
       "level": 1,
       "powerStorage": 1000,
-      "powerCostShot": 100,
+      "powerCostShot": 50,
       "powerLossStandby": 5,
       "towerRange": 2,
       "fireRate": 10,
       "damage": 1,
       "scrapCost": 100
+    },
+    {
+      "level": 2,
+      "powerStorage": 1200,
+      "powerCostShot": 55,
+      "powerLossStandby": 6,
+      "towerRange": 2.5,
+      "fireRate": 10,
+      "damage": 2,
+      "scrapCost": 175
+    },
+    {
+      "level": 3,
+      "powerStorage": 1500,
+      "powerCostShot": 60,
+      "powerLossStandby": 8,
+      "towerRange": 3,
+      "fireRate": 10,
+      "damage": 3,
+      "scrapCost": 250
     }
   ]
 }

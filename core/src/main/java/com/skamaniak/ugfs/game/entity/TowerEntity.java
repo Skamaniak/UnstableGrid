@@ -107,9 +107,13 @@ public class TowerEntity extends GameEntity implements PowerConsumer {
         float closestDistSq = rangePx * rangePx;
         float closestX = 0, closestY = 0;
 
+        boolean canTargetFlying = tower.isCanTargetFlying();
         for (int i = 0, n = enemies.size(); i < n; i++) {
             EnemyInstance enemy = enemies.get(i);
             if (!enemy.isAlive()) {
+                continue;
+            }
+            if (!canTargetFlying && enemy.isFlying()) {
                 continue;
             }
             Vector2 enemyPos = enemy.getWorldCenter();
@@ -141,10 +145,14 @@ public class TowerEntity extends GameEntity implements PowerConsumer {
                              float rangePx, float towerCenterX, float towerCenterY) {
         float rangeSq = rangePx * rangePx;
         int hitCount = 0;
+        boolean canTargetFlying = tower.isCanTargetFlying();
 
         for (int i = 0, n = enemies.size(); i < n; i++) {
             EnemyInstance enemy = enemies.get(i);
             if (!enemy.isAlive()) {
+                continue;
+            }
+            if (!canTargetFlying && enemy.isFlying()) {
                 continue;
             }
             Vector2 enemyPos = enemy.getWorldCenter();

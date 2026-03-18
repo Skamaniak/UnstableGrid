@@ -8,17 +8,38 @@
   "shotSound": "audio/sound/tower/tesla.ogg",
   "damageType": "electricity",
   "targeting": "single",
+  "canTargetFlying": false,
   "buildableOn": ["LAND"],
   "levels": [
     {
       "level": 1,
-      "powerStorage": 1000,
+      "powerStorage": 3000,
       "powerCostShot": 500,
       "powerLossStandby": 1,
       "towerRange": 3,
       "fireRate": 0.2,
       "damage": 100,
       "scrapCost": 200
+    },
+    {
+      "level": 2,
+      "powerStorage": 4000,
+      "powerCostShot": 600,
+      "powerLossStandby": 2,
+      "towerRange": 3.5,
+      "fireRate": 0.25,
+      "damage": 160,
+      "scrapCost": 325
+    },
+    {
+      "level": 3,
+      "powerStorage": 5000,
+      "powerCostShot": 750,
+      "powerLossStandby": 3,
+      "towerRange": 4,
+      "fireRate": 0.3,
+      "damage": 250,
+      "scrapCost": 450
     }
   ]
 }

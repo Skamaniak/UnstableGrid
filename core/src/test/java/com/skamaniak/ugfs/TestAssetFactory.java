@@ -141,9 +141,20 @@ public class TestAssetFactory {
 
     /**
      * Creates a Tower mock with full targeting configuration.
+     * canTargetFlying defaults to true (the tower can hit both ground and flying enemies).
      */
     public static Tower createTowerWithRange(int capacity, int standbyLoss, int shotCost, float fireRate,
                                              float towerRange, int damage, String targeting, boolean deferDamage) {
+        return createTowerWithRange(capacity, standbyLoss, shotCost, fireRate, towerRange, damage,
+            targeting, deferDamage, true);
+    }
+
+    /**
+     * Creates a Tower mock with full targeting configuration including the canTargetFlying flag.
+     */
+    public static Tower createTowerWithRange(int capacity, int standbyLoss, int shotCost, float fireRate,
+                                             float towerRange, int damage, String targeting, boolean deferDamage,
+                                             boolean canTargetFlying) {
         Tower.Level level = mock(Tower.Level.class);
         when(level.getPowerStorage()).thenReturn(capacity);
         when(level.getPowerLossStandby()).thenReturn(standbyLoss);
@@ -157,6 +168,7 @@ public class TestAssetFactory {
         when(tower.getLevels()).thenReturn(Collections.singletonList(level));
         when(tower.getTargeting()).thenReturn(targeting);
         when(tower.isDeferDamage()).thenReturn(deferDamage);
+        when(tower.isCanTargetFlying()).thenReturn(canTargetFlying);
         return tower;
     }
 

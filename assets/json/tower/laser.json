@@ -8,6 +8,7 @@
   "shotSound": "audio/sound/tower/laser.ogg",
   "damageType": "heat",
   "targeting": "single",
+  "canTargetFlying": true,
   "buildableOn": ["LAND"],
   "levels": [
     {
@@ -19,6 +20,26 @@
       "fireRate": 5,
       "damage": 1,
       "scrapCost": 50
+    },
+    {
+      "level": 2,
+      "powerStorage": 600,
+      "powerCostShot": 22,
+      "powerLossStandby": 1,
+      "towerRange": 4.5,
+      "fireRate": 5.5,
+      "damage": 2,
+      "scrapCost": 75
+    },
+    {
+      "level": 3,
+      "powerStorage": 750,
+      "powerCostShot": 25,
+      "powerLossStandby": 2,
+      "towerRange": 5,
+      "fireRate": 6,
+      "damage": 3,
+      "scrapCost": 100
     }
   ]
 }

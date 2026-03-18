@@ -9,6 +9,7 @@
   "damageType": "heat",
   "targeting": "single",
   "deferDamage": true,
+  "canTargetFlying": true,
   "buildableOn": ["LAND"],
   "levels": [
     {
@@ -20,6 +21,26 @@
       "fireRate": 1,
       "damage": 12,
       "scrapCost": 75
+    },
+    {
+      "level": 2,
+      "powerStorage": 1200,
+      "powerCostShot": 275,
+      "powerLossStandby": 4,
+      "towerRange": 3.5,
+      "fireRate": 1.2,
+      "damage": 18,
+      "scrapCost": 125
+    },
+    {
+      "level": 3,
+      "powerStorage": 1500,
+      "powerCostShot": 300,
+      "powerLossStandby": 5,
+      "towerRange": 4,
+      "fireRate": 1.5,
+      "damage": 25,
+      "scrapCost": 175
     }
   ]
 }

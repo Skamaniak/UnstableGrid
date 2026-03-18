@@ -9,6 +9,7 @@ public class Tower extends GameAsset {
     private String damageType;
     private String targeting;
     private boolean deferDamage;
+    private boolean canTargetFlying;
     private List<Level> levels;
 
     public String getMenuIcon() {
@@ -33,6 +34,10 @@ public class Tower extends GameAsset {
 
     public boolean isDeferDamage() {
         return deferDamage;
+    }
+
+    public boolean isCanTargetFlying() {
+        return canTargetFlying;
     }
 
     public List<Level> getLevels() {
