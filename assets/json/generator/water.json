@@ -15,13 +15,13 @@
     },
     {
       "level": 2,
-      "powerStorage": 400,
+      "powerStorage": 350,
       "powerGenerationRate": 150,
       "scrapCost": 125
     },
     {
       "level": 3,
-      "powerStorage": 600,
+      "powerStorage": 500,
       "powerGenerationRate": 200,
       "scrapCost": 175
     }

@@ -9,21 +9,21 @@
   "levels": [
     {
       "level": 1,
-      "powerStorage": 10000,
+      "powerStorage": 5000,
       "powerLossStandby": 2,
       "scrapCost": 75
     },
     {
       "level": 2,
-      "powerStorage": 15000,
+      "powerStorage": 8000,
       "powerLossStandby": 3,
-      "scrapCost": 100
+      "scrapCost": 125
     },
     {
       "level": 3,
-      "powerStorage": 20000,
+      "powerStorage": 12000,
       "powerLossStandby": 4,
-      "scrapCost": 150
+      "scrapCost": 175
     }
   ]
 }
