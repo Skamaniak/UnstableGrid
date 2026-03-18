@@ -17,6 +17,7 @@ public class TowerEntity extends GameEntity implements PowerConsumer {
     private float powerBank = 0f;
     private float cumulativeDelta = 0;
     private boolean propagated = false;
+    private final ShotResult shotResult = new ShotResult();
 
     public TowerEntity(Vector2 position, Tower tower) {
         super(position);
@@ -54,10 +55,17 @@ public class TowerEntity extends GameEntity implements PowerConsumer {
         propagated = false;
     }
 
+    public ShotResult getShotResult() {
+        return shotResult;
+    }
+
     public boolean attemptShot(float delta, List<EnemyInstance> enemies) {
         cumulativeDelta += delta;
 
         Tower.Level level = towerLevel();
+        if (level.getFireRate() <= 0) {
+            return false;
+        }
         float timeBetweenShots = 1f / level.getFireRate();
         if (cumulativeDelta >= timeBetweenShots) {
             if (powerBank >= level.getPowerCostShot() && shoot(enemies, level)) {
@@ -77,8 +85,27 @@ public class TowerEntity extends GameEntity implements PowerConsumer {
         float towerCenterX = (position.x + 0.5f) * GameConstants.TILE_SIZE_PX;
         float towerCenterY = (position.y + 0.5f) * GameConstants.TILE_SIZE_PX;
 
+        shotResult.reset();
+        shotResult.towerX = towerCenterX;
+        shotResult.towerY = towerCenterY;
+        shotResult.rangePx = rangePx;
+        shotResult.damage = level.getDamage();
+
+        String targeting = tower.getTargeting();
+        shotResult.targeting = targeting != null ? targeting : "single";
+
+        if ("aoe".equals(targeting)) {
+            return shootAoe(enemies, level, rangePx, towerCenterX, towerCenterY);
+        } else {
+            return shootSingle(enemies, level, rangePx, towerCenterX, towerCenterY);
+        }
+    }
+
+    private boolean shootSingle(List<EnemyInstance> enemies, Tower.Level level,
+                                float rangePx, float towerCenterX, float towerCenterY) {
         EnemyInstance closest = null;
         float closestDistSq = rangePx * rangePx;
+        float closestX = 0, closestY = 0;
 
         for (int i = 0, n = enemies.size(); i < n; i++) {
             EnemyInstance enemy = enemies.get(i);
@@ -92,11 +119,51 @@ public class TowerEntity extends GameEntity implements PowerConsumer {
             if (distSq <= closestDistSq) {
                 closestDistSq = distSq;
                 closest = enemy;
+                closestX = enemyPos.x;
+                closestY = enemyPos.y;
             }
         }
 
         if (closest != null) {
-            closest.takeDamage(level.getDamage());
+            shotResult.fired = true;
+            shotResult.targetEnemy = closest;
+            shotResult.targetX = closestX;
+            shotResult.targetY = closestY;
+            if (!tower.isDeferDamage()) {
+                closest.takeDamage(level.getDamage());
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private boolean shootAoe(List<EnemyInstance> enemies, Tower.Level level,
+                             float rangePx, float towerCenterX, float towerCenterY) {
+        float rangeSq = rangePx * rangePx;
+        int hitCount = 0;
+
+        for (int i = 0, n = enemies.size(); i < n; i++) {
+            EnemyInstance enemy = enemies.get(i);
+            if (!enemy.isAlive()) {
+                continue;
+            }
+            Vector2 enemyPos = enemy.getWorldCenter();
+            float dx = enemyPos.x - towerCenterX;
+            float dy = enemyPos.y - towerCenterY;
+            float distSq = dx * dx + dy * dy;
+            if (distSq <= rangeSq) {
+                enemy.takeDamage(level.getDamage());
+                if (shotResult.aoeTargetCount < shotResult.aoeTargets.length) {
+                    shotResult.aoeTargets[shotResult.aoeTargetCount++] = enemy;
+                }
+                hitCount++;
+            }
+        }
+
+        if (hitCount > 0) {
+            shotResult.fired = true;
+            shotResult.targetX = towerCenterX;
+            shotResult.targetY = towerCenterY;
             return true;
         }
         return false;

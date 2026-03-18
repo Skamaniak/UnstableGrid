@@ -16,14 +16,16 @@ import com.skamaniak.ugfs.simulation.PowerConsumer;
 import com.skamaniak.ugfs.simulation.PowerGrid;
 import com.skamaniak.ugfs.simulation.PowerSource;
 
+import com.skamaniak.ugfs.game.effect.*;
+
 import java.util.Arrays;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 public class GameState {
@@ -47,6 +49,10 @@ public class GameState {
 
     private final Color healthBarColor = new Color();
     private final Map<GameEntity, int[]> wireCountCache = new HashMap<>();
+    private final List<VisualEffect> effects = new ArrayList<>();
+    private final List<VisualEffect> pendingEffects = new ArrayList<>();
+    private static final Random soundRandom = new Random();
+    private static final Color EMP_COLOR = new Color(0.3f, 0.5f, 1f, 1f);
 
     private int scrap;
 
@@ -354,14 +360,67 @@ public class GameState {
         grid.simulatePropagation(delta);
         simulateShooting(delta);
         simulateEnemies(delta);
+        updateEffects(delta);
     }
 
     private void simulateShooting(float delta) {
         for (TowerEntity tower : towers) {
             if (tower.attemptShot(delta, enemies)) {
-                GameAssetManager.INSTANCE.loadSound(tower.tower.getShotSound()).play();
+                playTowerSound(tower);
+                spawnShotEffect(tower);
             }
         }
+    }
+
+    private void playTowerSound(TowerEntity tower) {
+        float pitch = 0.85f + soundRandom.nextFloat() * 0.30f;
+        float volume = 0.90f + soundRandom.nextFloat() * 0.20f;
+        GameAssetManager.INSTANCE.loadSound(tower.tower.getShotSound()).play(volume, pitch, 0f);
+    }
+
+    private void spawnShotEffect(TowerEntity tower) {
+        ShotResult sr = tower.getShotResult();
+        if (!sr.fired) {
+            return;
+        }
+
+        String towerId = tower.tower.getId();
+        if ("tower.laser".equals(towerId)) {
+            effects.add(new LaserBeamEffect(sr.towerX, sr.towerY, sr.targetX, sr.targetY));
+            effects.add(new ImpactEffect(sr.targetX, sr.targetY));
+        } else if ("tower.tesla".equals(towerId)) {
+            effects.add(new LightningArcEffect(sr.towerX, sr.towerY, sr.targetX, sr.targetY, soundRandom));
+            effects.add(new ImpactEffect(sr.targetX, sr.targetY));
+        } else if ("tower.plasma".equals(towerId)) {
+            effects.add(new PlasmaProjectileEffect(sr.towerX, sr.towerY, sr.targetEnemy, sr.damage, pendingEffects));
+            // Impact spawned on arrival by PlasmaProjectileEffect into pendingEffects
+        } else if ("tower.microwave".equals(towerId)) {
+            effects.add(new AoePulseEffect(sr.towerX, sr.towerY, sr.rangePx, Color.ORANGE));
+            spawnAoeImpacts(sr);
+        } else if ("tower.emp".equals(towerId)) {
+            effects.add(new AoePulseEffect(sr.towerX, sr.towerY, sr.rangePx, EMP_COLOR));
+            spawnAoeImpacts(sr);
+        }
+    }
+
+    private void spawnAoeImpacts(ShotResult sr) {
+        for (int i = 0; i < sr.aoeTargetCount; i++) {
+            EnemyInstance enemy = sr.aoeTargets[i];
+            effects.add(new ImpactEffect(enemy.getWorldCenter().x, enemy.getWorldCenter().y));
+        }
+    }
+
+    private void updateEffects(float delta) {
+        Iterator<VisualEffect> it = effects.iterator();
+        while (it.hasNext()) {
+            VisualEffect effect = it.next();
+            effect.update(delta);
+            if (!effect.isAlive()) {
+                it.remove();
+            }
+        }
+        effects.addAll(pendingEffects);
+        pendingEffects.clear();
     }
 
     private void simulateEnemies(float delta) {
@@ -436,8 +495,9 @@ public class GameState {
         drawTerrain();
         drawGameEntities();
 
-        // TODO Draw UI
-        // TODO Draw projectiles, effects, etc.
+        for (int i = 0, n = effects.size(); i < n; i++) {
+            effects.get(i).drawTextures(game.batch);
+        }
     }
 
     public void drawShapes(ShapeRenderer shapeRenderer) {
@@ -492,6 +552,11 @@ public class GameState {
             healthBarColor.set(Color.RED).lerp(Color.GREEN, hf);
             shapeRenderer.setColor(healthBarColor);
             shapeRenderer.rect(ex - 12, ey - 22, 24 * hf, 4);
+        }
+
+        // Draw visual effects
+        for (int i = 0, n = effects.size(); i < n; i++) {
+            effects.get(i).drawShapes(shapeRenderer);
         }
     }
 

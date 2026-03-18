@@ -132,9 +132,18 @@ public class TestAssetFactory {
 
     /**
      * Creates a Tower mock that also stubs towerRange and damage on its single level.
+     * Defaults to targeting "single" and deferDamage false.
      */
     public static Tower createTowerWithRange(int capacity, int standbyLoss, int shotCost, float fireRate,
                                              float towerRange, int damage) {
+        return createTowerWithRange(capacity, standbyLoss, shotCost, fireRate, towerRange, damage, "single", false);
+    }
+
+    /**
+     * Creates a Tower mock with full targeting configuration.
+     */
+    public static Tower createTowerWithRange(int capacity, int standbyLoss, int shotCost, float fireRate,
+                                             float towerRange, int damage, String targeting, boolean deferDamage) {
         Tower.Level level = mock(Tower.Level.class);
         when(level.getPowerStorage()).thenReturn(capacity);
         when(level.getPowerLossStandby()).thenReturn(standbyLoss);
@@ -146,6 +155,8 @@ public class TestAssetFactory {
 
         Tower tower = mock(Tower.class);
         when(tower.getLevels()).thenReturn(Collections.singletonList(level));
+        when(tower.getTargeting()).thenReturn(targeting);
+        when(tower.isDeferDamage()).thenReturn(deferDamage);
         return tower;
     }
 

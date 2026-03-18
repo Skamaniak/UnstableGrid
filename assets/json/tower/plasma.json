@@ -8,17 +8,18 @@
   "shotSound": "audio/sound/tower/plasma.ogg",
   "damageType": "heat",
   "targeting": "single",
+  "deferDamage": true,
   "buildableOn": ["LAND"],
   "levels": [
     {
       "level": 1,
-      "powerStorage": 1,
-      "powerCostShot": 1,
-      "powerLossStandby": 1,
-      "towerRange": 1,
+      "powerStorage": 1000,
+      "powerCostShot": 250,
+      "powerLossStandby": 3,
+      "towerRange": 3,
       "fireRate": 1,
-      "damage": 1,
-      "scrapCost": 1
+      "damage": 12,
+      "scrapCost": 75
     }
   ]
 }

@@ -6,6 +6,7 @@ import com.skamaniak.ugfs.TestAssetFactory;
 import com.skamaniak.ugfs.asset.model.Enemy;
 import com.skamaniak.ugfs.asset.model.Tower;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -241,5 +242,134 @@ class TowerEntityShootingTest {
 
         assertTrue(boundary.getHealthFraction() < 1.0f,
             "Enemy at the exact range boundary should be included (distSq <= rangePx^2)");
+    }
+
+    // -------------------------------------------------------------------------
+    // ShotResult population
+    // -------------------------------------------------------------------------
+
+    @Test
+    void shotResult_singleTarget_populatedCorrectly() {
+        EnemyInstance nearby = aliveEnemyAt(32f + 50f, 32f);
+
+        entity.attemptShot(1.0f, Collections.singletonList(nearby));
+
+        ShotResult sr = entity.getShotResult();
+        assertTrue(sr.fired);
+        assertEquals(32f, sr.towerX, 0.001f);
+        assertEquals(32f, sr.towerY, 0.001f);
+        assertEquals(nearby, sr.targetEnemy);
+        assertEquals("single", sr.targeting);
+    }
+
+    // -------------------------------------------------------------------------
+    // AOE targeting
+    // -------------------------------------------------------------------------
+
+    @Nested
+    class AoeTargeting {
+        private TowerEntity aoeTower;
+
+        @BeforeEach
+        void setUp() {
+            Tower aoe = TestAssetFactory.createTowerWithRange(
+                1000, 0, 0, 1.0f, 3.0f, 10, "aoe", false);
+            aoeTower = new TowerEntity(new Vector2(0, 0), aoe);
+            aoeTower.consume(1000f, 0f);
+        }
+
+        @Test
+        void aoe_damagesAllEnemiesInRange() {
+            EnemyInstance e1 = aliveEnemyAt(32f, 32f);
+            EnemyInstance e2 = aliveEnemyAt(32f + 50f, 32f);
+            EnemyInstance e3 = aliveEnemyAt(32f + 100f, 32f);
+
+            aoeTower.attemptShot(1.0f, Arrays.asList(e1, e2, e3));
+
+            assertTrue(e1.getHealthFraction() < 1.0f, "e1 should be damaged");
+            assertTrue(e2.getHealthFraction() < 1.0f, "e2 should be damaged");
+            assertTrue(e3.getHealthFraction() < 1.0f, "e3 should be damaged");
+        }
+
+        @Test
+        void aoe_skipsEnemiesOutOfRange() {
+            EnemyInstance inRange = aliveEnemyAt(32f, 32f);
+            EnemyInstance outOfRange = aliveEnemyAt(32f + 300f, 32f);
+
+            aoeTower.attemptShot(1.0f, Arrays.asList(inRange, outOfRange));
+
+            assertTrue(inRange.getHealthFraction() < 1.0f, "In-range enemy should be damaged");
+            assertEquals(1.0f, outOfRange.getHealthFraction(), 0.001f, "Out-of-range enemy should not be damaged");
+        }
+
+        @Test
+        void aoe_skipsDeadEnemies() {
+            EnemyInstance dead = aliveEnemyAt(32f, 32f);
+            dead.takeDamage(100);
+            EnemyInstance alive = aliveEnemyAt(32f + 50f, 32f);
+
+            aoeTower.attemptShot(1.0f, Arrays.asList(dead, alive));
+
+            assertTrue(alive.getHealthFraction() < 1.0f, "Alive enemy should be damaged");
+        }
+
+        @Test
+        void aoe_returnsFalseForNoEnemies() {
+            boolean fired = aoeTower.attemptShot(1.0f, Collections.emptyList());
+            assertFalse(fired);
+        }
+
+        @Test
+        void aoe_shotResult_populatesAoeTargets() {
+            EnemyInstance e1 = aliveEnemyAt(32f, 32f);
+            EnemyInstance e2 = aliveEnemyAt(32f + 50f, 32f);
+
+            aoeTower.attemptShot(1.0f, Arrays.asList(e1, e2));
+
+            ShotResult sr = aoeTower.getShotResult();
+            assertTrue(sr.fired);
+            assertEquals("aoe", sr.targeting);
+            assertEquals(2, sr.aoeTargetCount);
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Deferred damage (Plasma-style)
+    // -------------------------------------------------------------------------
+
+    @Nested
+    class DeferredDamage {
+        private TowerEntity deferredTower;
+
+        @BeforeEach
+        void setUp() {
+            Tower deferred = TestAssetFactory.createTowerWithRange(
+                1000, 0, 0, 1.0f, 3.0f, 20, "single", true);
+            deferredTower = new TowerEntity(new Vector2(0, 0), deferred);
+            deferredTower.consume(1000f, 0f);
+        }
+
+        @Test
+        void deferredDamage_doesNotDamageEnemyImmediately() {
+            EnemyInstance nearby = aliveEnemyAt(32f, 32f);
+
+            boolean fired = deferredTower.attemptShot(1.0f, Collections.singletonList(nearby));
+
+            assertTrue(fired, "Tower should fire");
+            assertEquals(1.0f, nearby.getHealthFraction(), 0.001f,
+                "Enemy should NOT be damaged immediately when deferDamage is true");
+        }
+
+        @Test
+        void deferredDamage_shotResultHasTargetEnemy() {
+            EnemyInstance nearby = aliveEnemyAt(32f, 32f);
+
+            deferredTower.attemptShot(1.0f, Collections.singletonList(nearby));
+
+            ShotResult sr = deferredTower.getShotResult();
+            assertTrue(sr.fired);
+            assertEquals(nearby, sr.targetEnemy);
+            assertEquals(20, sr.damage);
+        }
     }
 }

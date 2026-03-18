@@ -8,6 +8,7 @@ public class Tower extends GameAsset {
     private String shotSound;
     private String damageType;
     private String targeting;
+    private boolean deferDamage;
     private List<Level> levels;
 
     public String getMenuIcon() {
@@ -28,6 +29,10 @@ public class Tower extends GameAsset {
 
     public String getTargeting() {
         return targeting;
+    }
+
+    public boolean isDeferDamage() {
+        return deferDamage;
     }
 
     public List<Level> getLevels() {
