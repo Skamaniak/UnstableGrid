@@ -74,6 +74,7 @@ When multiple end-state flags can be set in the same simulation frame (e.g. `gam
 - Static singletons like `GameAssetManager.INSTANCE` are intentional. Do not refactor them.
 - No object allocation inside `simulate()` or `draw()` called every frame.
 - `static final` constants are free — use `GameConstants` for shared values.
+- When a `VisualEffect.update()` needs to spawn child effects (e.g. `PlasmaProjectileEffect` spawning `ImpactEffect` on arrival), add them to `GameState.pendingEffects` (passed via constructor), never to the live `effects` list. `updateEffects()` iterates `effects` with an `Iterator` and calls `it.remove()` on dead effects — any `effects.add()` during that iteration throws `ConcurrentModificationException`. The `pendingEffects` list is flushed into `effects` after iteration completes.
 
 ## Testing Boundaries
 

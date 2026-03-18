@@ -69,9 +69,11 @@ Invoke the `implementer` subagent, passing it the spec file path. Wait for it to
 
 Invoke the `test-generator` subagent, passing it the spec file path and the list of files changed by the implementer. Wait for it to finish. Report which test classes were written and the test run result.
 
+**Important:** Do NOT start Step 6 until the test-generator has finished. The code reviewer must review the test files too.
+
 ## Step 6 — Code review
 
-Invoke the `code-reviewer` subagent, passing it the spec file path and the list of changed files. Wait for it to finish. Present the full review output to the user.
+Invoke the `code-reviewer` subagent, passing it the spec file path and the **combined** list of files changed by the implementer AND the test files written by the test-generator in Step 5. The reviewer must see the full picture — implementation and tests together. Wait for it to finish. Present the full review output to the user.
 
 If the verdict is **Approved** or **Approved with warnings**, the workflow continues to Step 7. Then read the spec file, extract the **Manual test scenarios** section, and print it to the console so the user can walk through manual verification.
 

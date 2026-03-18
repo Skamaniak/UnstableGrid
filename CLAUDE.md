@@ -132,6 +132,14 @@ Enemies spawn from level-defined spawn locations, pathfind to a base tile, and a
 
 **Rendering (temporary)** — Spawn points: red circles. Base: green circle. Enemies: orange circles with health bars.
 
+### Visual Effect System (`game/effect/`)
+
+`VisualEffect` is the abstract base for transient visual effects (beams, arcs, projectiles, pulses, impacts). Effects are stored in `GameState.effects`, updated in `simulate()` after enemies, and drawn in both `drawTextures()` and `drawShapes()`. Dead effects are removed via iterator during `updateEffects()`.
+
+**`pendingEffects` pattern:** Effects that spawn child effects during `update()` (e.g. `PlasmaProjectileEffect` spawning `ImpactEffect` on arrival) must add them to `GameState.pendingEffects`, not the live `effects` list. The pending list is flushed after iteration completes. See shared-conventions.md Performance Rules.
+
+Tower-specific effects are spawned by `GameState.spawnShotEffect()` which switches on tower ID. `ShotResult` (mutable struct, one per `TowerEntity`) carries shot metadata (positions, targeting mode, AOE targets, deferred damage info) from `shoot()` to the effect spawner without per-shot allocation.
+
 ## Key Conventions
 
 - Assets are defined as JSON files in `assets/json/{type}/` and loaded at startup via `JsonAssetLoader`.
