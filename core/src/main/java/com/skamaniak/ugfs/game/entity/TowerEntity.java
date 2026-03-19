@@ -2,6 +2,7 @@ package com.skamaniak.ugfs.game.entity;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.skamaniak.ugfs.GameConstants;
 import com.skamaniak.ugfs.asset.GameAssetManager;
@@ -186,7 +187,10 @@ public class TowerEntity extends GameEntity implements PowerConsumer {
             GameAssetManager.TILE_SIZE_PX,
             GameAssetManager.TILE_SIZE_PX);
 
-        drawEnergyLevel(batch, powerBank, towerLevel().getPowerStorage());
+    }
+
+    public void drawEnergyBar(ShapeRenderer shapeRenderer) {
+        drawEnergyBar(shapeRenderer, powerBank, towerLevel().getPowerStorage());
     }
 
     @Override

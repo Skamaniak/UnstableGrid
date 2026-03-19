@@ -1,13 +1,16 @@
 package com.skamaniak.ugfs.game.entity;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.skamaniak.ugfs.GameConstants;
-import com.skamaniak.ugfs.asset.GameAssetManager;
 
 public abstract class GameEntity implements Drawable {
+
+    private static final float ENERGY_BAR_WIDTH = 52f;
+    private static final float ENERGY_BAR_HEIGHT = 5f;
+    private static final float ENERGY_BAR_X_OFFSET = 6f;
+    private static final float ENERGY_BAR_Y_OFFSET = 2f;
 
     private static final Color CHEVRON_COLOR = new Color(1f, 0.84f, 0f, 1f);
     private static final float CHEVRON_WIDTH = 12f;
@@ -25,12 +28,32 @@ public abstract class GameEntity implements Drawable {
         return position;
     }
 
-    protected void drawEnergyLevel(SpriteBatch batch, float current, float max) { //FIXME remove, this is only for debugging
-        GameAssetManager.INSTANCE.getFont()
-            .draw(batch,
-                (Math.round(current * 100 / max)) + "%",
-                position.x * GameAssetManager.TILE_SIZE_PX + 4,
-                position.y * GameAssetManager.TILE_SIZE_PX + 16);
+    protected void drawEnergyBar(ShapeRenderer shapeRenderer, float currentPower, float maxPower) {
+        if (maxPower <= 0) {
+            return;
+        }
+
+        float fraction = currentPower / maxPower;
+        fraction = Math.max(0f, Math.min(fraction, 1f));
+
+        float barX = position.x * GameConstants.TILE_SIZE_PX + ENERGY_BAR_X_OFFSET;
+        float barY = position.y * GameConstants.TILE_SIZE_PX + ENERGY_BAR_Y_OFFSET;
+
+        // Background (dark gray, full width)
+        shapeRenderer.setColor(Color.DARK_GRAY);
+        shapeRenderer.rect(barX, barY, ENERGY_BAR_WIDTH, ENERGY_BAR_HEIGHT);
+
+        // Foreground (colored by fill fraction, fills from left)
+        float r, g;
+        if (fraction <= 0.5f) {
+            r = 1f;
+            g = fraction * 2f;
+        } else {
+            r = 1f - (fraction - 0.5f) * 2f;
+            g = 1f;
+        }
+        shapeRenderer.setColor(r, g, 0f, 1f);
+        shapeRenderer.rect(barX, barY, ENERGY_BAR_WIDTH * fraction, ENERGY_BAR_HEIGHT);
     }
 
     public int getTotalScrapInvested() {

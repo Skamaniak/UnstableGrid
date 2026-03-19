@@ -503,12 +503,15 @@ public class GameState {
 
     public void drawShapes(ShapeRenderer shapeRenderer) {
         for (GeneratorEntity generator : generators) {
+            generator.drawEnergyBar(shapeRenderer);
             generator.drawChevrons(shapeRenderer);
         }
         for (PowerStorageEntity storage : storages) {
+            storage.drawEnergyBar(shapeRenderer);
             storage.drawChevrons(shapeRenderer);
         }
         for (TowerEntity tower : towers) {
+            tower.drawEnergyBar(shapeRenderer);
             tower.drawChevrons(shapeRenderer);
         }
 
