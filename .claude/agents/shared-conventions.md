@@ -107,6 +107,10 @@ When multiple end-state flags can be set in the same simulation frame (e.g. `gam
 
 When testing `attemptShot()`, always provide an enemy within range if the test is about power or timing mechanics. Using `Collections.emptyList()` makes `attemptShot()` return `false` regardless of power/timer state, which silently tests the wrong condition.
 
+## Data-Driven Design Rule
+
+When adding a new property that varies per asset type (tower, enemy, generator, etc.), add it as a field on the asset's JSON and Java model class — not as a switch/if on the asset's `id` in Java code. The goal: adding new content (a new tower, a new enemy type) should require only a new JSON file, with zero Java changes. No defaults — every JSON must explicitly declare the field so nothing is left implicit.
+
 ## Entity & Asset Conventions
 
 - `ConduitEntity` does NOT extend `GameEntity` (no tile position).

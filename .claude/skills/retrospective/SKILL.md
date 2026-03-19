@@ -20,6 +20,7 @@ For each problem, classify it:
 - **Convention gap** — a shared convention is missing or incomplete in `shared-conventions.md`.
 - **Skill gap** — the workflow skill (e.g., `develop-feature`) has a step that's unclear, missing, or wrong.
 - **CLAUDE.md gap** — project-level knowledge is missing that would help all agents.
+- **Linter gap** — the issue is a mechanical pattern (structural, not semantic) that PMD could catch automatically via an XPath rule in `quality/pmd/unstable-grid-ruleset.xml`.
 - **One-off** — specific to this feature, not worth generalizing. Skip these.
 
 Present your analysis to the user as a concise summary before making any changes.
@@ -37,6 +38,15 @@ For each proposed change, state:
 - What to add/modify/remove
 - Why (link to the session event that motivated it)
 - Whether it's a new rule or an update to an existing one
+
+For **Linter gap** issues specifically, propose the change as:
+- **Rule name** (PascalCase, descriptive)
+- **What it detects** (the pattern in plain English)
+- **XPath sketch** (approximate PMD 7 XPath — node names, attributes, structure)
+- **Priority** (1 = critical/crash, 2 = high/convention, 3 = medium/suggestion)
+- **File:** `quality/pmd/unstable-grid-ruleset.xml`
+
+Linter rules should only be proposed for **mechanical, structural patterns** — things that can be reliably detected from the AST alone (e.g., "method X calls Y", "class extending Z has a public setter"). Do NOT propose linter rules for semantic issues that require understanding intent (e.g., "variable name is misleading").
 
 **Do NOT propose changes yet. Present the list and wait for user approval.**
 
@@ -74,4 +84,8 @@ These guardrails prevent the retrospective from degrading the workflow over time
 After applying changes:
 1. Check line counts of modified files against the limits above.
 2. Grep for duplicated content across agents, shared-conventions, and CLAUDE.md.
-3. Report what was changed and the current line counts.
+3. If any PMD rules were added or modified, run `./gradlew core:pmdMain core:pmdTest` to verify:
+   - The ruleset XML parses without errors.
+   - New rules do not produce false positives on the existing codebase (unless the existing codebase genuinely violates the new rule — in which case, flag it to the user rather than removing the rule).
+   - Existing rules still pass.
+4. Report what was changed and the current line counts.

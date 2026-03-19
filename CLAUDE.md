@@ -117,11 +117,12 @@ Two coordinate spaces: **world coordinates** (pixels, 64px per tile) and **mesh/
 
 Enemies spawn from level-defined spawn locations, pathfind to a base tile, and are targeted by towers. The simulation runs each frame in `GameState.simulateEnemies(delta)` after power propagation and shooting.
 
-- **`Enemy`** — JSON asset with `health`, `speed`, `scrap` (kill reward), `flying`. Loaded from `assets/json/enemy/`.
+- **`Enemy`** — JSON asset with `health`, `speed`, `scrap` (kill reward), `flying`, plus visual fields: `shape` (`"circle"`/`"triangle"`), `color` (RGB float array), `radius` (px). Loaded from `assets/json/enemy/`.
 - **`EnemyInstance`** — NOT a `GameEntity`. Uses world coordinates, holds path (list of waypoints), alive/reachedBase flags. `repath()` replaces path from current position without teleporting.
 - **`WaveManager`** — Drives wave lifecycle. Decoupled from LibGDX via `EnemyLookup` and `PathComputer` interfaces. Exposes `WaveStatus` (mutable, reused per frame) with wave state for the HUD.
 - **`TilePathfinder`** — A* on tile grid (4-directional). Obstacles = structures + water + impassable terrain. Flying enemies skip pathfinding.
-- **`TowerEntity.shoot()`** — Returns `boolean`; `attemptShot()` gates power/timer/sound on it returning `true`.
+- **`TowerEntity.shoot()`** — Returns `boolean`; `attemptShot()` gates power/timer/sound on it returning `true`. `shootSingle()` and `shootAoe()` skip flying enemies when `tower.isCanTargetFlying()` is false.
+- **`Tower.canTargetFlying`** — boolean field on the Tower JSON (no default). Explicitly set in every tower JSON. Laser/Plasma can target flying; Tesla/Microwave/EMP/Barrier cannot.
 
 **Game flow:**
 - **Build phase:** Countdown before each wave. Building allowed, wiring/selling always allowed.
@@ -130,7 +131,7 @@ Enemies spawn from level-defined spawn locations, pathfind to a base tile, and a
 - **Victory:** All waves exhausted + no alive enemies (gated by `!gameOver`). Shows overlay.
 - **Defeat:** Enemy reaches base. Shows overlay. Music continues until player exits.
 
-**Rendering (temporary)** — Spawn points: red circles. Base: green circle. Enemies: orange circles with health bars.
+**Rendering (temporary)** — Spawn points: red circles. Base: green circle. Enemies: data-driven shapes (circle for ground, triangle for flying) with per-type color and radius from the `Enemy` JSON asset. Health bars below each shape.
 
 ### Visual Effect System (`game/effect/`)
 
@@ -146,6 +147,23 @@ Tower-specific effects are spawned by `GameState.spawnShotEffect()` which switch
 - Game assets (textures, sounds, skin) live under `assets/` at the project root. The `assets/` directory is the working directory at runtime.
 - Asset paths in code are relative to `assets/` (e.g., `"assets/visual/select-reticle.png"`).
 - The Gradle wrapper is configured with Java source/target compatibility 8, but `KeyboardControls` uses `Set.of()` which requires Java 9+. This works at runtime on modern JVMs but would break a strict JDK 8 toolchain.
+
+## Static Analysis (PMD)
+
+```bash
+# Run PMD convention checks
+./gradlew core:pmdMain core:pmdTest
+```
+
+Custom PMD rules are defined in `quality/pmd/unstable-grid-ruleset.xml`. These enforce project conventions automatically:
+
+- **NoAllocationInHotPath** — Flags `new` expressions inside `simulate()`, `draw()`, `drawTextures()`, `drawShapes()`, and `VisualEffect.update()` methods.
+- **NoGdxInPureLogic** — Flags `Gdx.*` imports in pure-logic classes (`simulation/` package, `WaveManager`, `TilePathfinder`, `NavigationUtils`, `EnemyInstance`).
+- **NoSettersOnGameAsset** — Flags public `set*()` methods on `GameAsset` subclasses.
+- **NoGameAssetManagerInTests** — Flags `GameAssetManager` imports in test classes.
+- **UsePendingEffectsInUpdate** — Flags `effects.add()` inside `VisualEffect.update()` (must use `pendingEffects`).
+
+Rules are XPath-based and can be edited directly in the XML file — no compilation needed.
 
 ## Refactoring & Testing Guidelines
 
@@ -163,8 +181,8 @@ New features are developed using a multi-agent pipeline invoked with the `/devel
 1. **`feature-planner`** (Opus) — reads the codebase, writes a spec to `docs/specs/YYYYMMDD-<feature-name>.md`, returns a summary
 2. **`Manual gate`** — spec is printed inline for review; proceed only after approval
 3. **`implementer`** (Opus) — follows the spec, explores the state machine before coding, checks off steps as it goes, compiles and runs tests before finishing
-4. **`test-generator`** (Sonnet) — writes JUnit 5 + Mockito tests for all new pure-logic code
-5. **`code-reviewer`** (Sonnet) — reviews correctness, performance, and convention adherence; loops back to the implementer if blockers are found
+4. **PMD lint + `test-generator` + `code-reviewer`** (parallel) — PMD checks convention compliance, test-generator writes unit tests, code-reviewer reviews implementation files — all three run simultaneously. Then a follow-up code-review pass covers the generated test files.
+5. **Review resolution loop** — if blockers are found, implementer fixes and the parallel lint+test+review cycle repeats (max 2 cycles before escalating to user)
 6. **`Manual testing & bug-squasher`** (interactive) — user manually tests the feature, reports bugs; **`bug-squasher`** (Opus) fixes bugs, writes regression tests, and the code-reviewer re-reviews. Loops until user confirms no more bugs.
 7. **`Spec reconciliation`** — updates the spec with all bug fixes and behavioral adjustments so it matches the final implementation
 

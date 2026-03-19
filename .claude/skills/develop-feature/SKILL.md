@@ -1,6 +1,6 @@
 ---
 name: develop-feature
-description: Full feature development pipeline for Unstable Grid. Runs requirements gathering (interactive) → feature-planner → (manual gate) → implementer → test-generator → code-reviewer → manual testing & bug-squasher (interactive) → spec reconciliation.
+description: Full feature development pipeline for Unstable Grid. Runs requirements gathering (interactive) → feature-planner → (manual gate) → implementer → lint + test-gen + code-review (parallel) → manual testing & bug-squasher (interactive) → spec reconciliation.
 user-invocable: true
 disable-model-invocation: true
 ---
@@ -59,25 +59,40 @@ Then ask the user:
 
 Do not proceed until the user explicitly confirms they want to continue. If they request changes, update the spec file accordingly, print the updated spec, and ask again. Once they confirm, continue to Step 4.
 
-Note: Steps 4–6 reference each other internally — the `test-generator` and `code-reviewer` loop described in Step 6 invokes the `implementer` (Step 4) and `test-generator` (Step 5) as needed.
+Note: Steps 4–6 reference each other internally — the review loop described in Step 6 invokes the `implementer` (Step 4) and `test-generator` (Step 5) as needed.
 
 ## Step 4 — Implement
 
-Invoke the `implementer` subagent, passing it the spec file path. Wait for it to finish. Report what was implemented.
+Invoke the `implementer` subagent, passing it the spec file path. Wait for it to finish. Report what was implemented and collect the list of files changed.
 
-## Step 5 — Generate tests
+## Step 5 — Lint, generate tests, and review implementation (parallel)
 
-Invoke the `test-generator` subagent, passing it the spec file path and the list of files changed by the implementer. Wait for it to finish. Report which test classes were written and the test run result.
+After the implementer finishes, launch **three agents in parallel** in a single message:
 
-**Important:** Do NOT start Step 6 until the test-generator has finished. The code reviewer must review the test files too.
+1. **PMD lint** — run `./gradlew core:pmdMain core:pmdTest` via Bash. This checks the project's custom convention rules (hot-path allocation, Gdx access in pure-logic classes, GameAsset setters, test mocking conventions, pendingEffects usage). Collect any violations.
+2. **`test-generator`** — invoke with the spec file path and the list of implementation files changed. It writes tests and runs `./gradlew core:test`.
+3. **`code-reviewer`** — invoke with the spec file path and **only the implementation files** (not tests — those aren't written yet). This reviews correctness, performance, and convention adherence of the implementation.
 
-## Step 6 — Code review
+Wait for all three to complete, then:
+- If PMD found violations, include them as additional Blockers in the review output.
+- Report which test classes were written and the test run result.
+- Report the implementation review result.
 
-Invoke the `code-reviewer` subagent, passing it the spec file path and the **combined** list of files changed by the implementer AND the test files written by the test-generator in Step 5. The reviewer must see the full picture — implementation and tests together. Wait for it to finish. Present the full review output to the user.
+## Step 5b — Review test code
 
-If the verdict is **Approved** or **Approved with warnings**, the workflow continues to Step 7. Then read the spec file, extract the **Manual test scenarios** section, and print it to the console so the user can walk through manual verification.
+After Step 5 completes, invoke the `code-reviewer` subagent **once more**, passing it the spec file path and **only the test files** written by the test-generator. This ensures test code is also reviewed for correctness and convention adherence (e.g., proper use of `TestAssetFactory`, no `GameAssetManager` in tests, assertion quality).
 
-If the verdict is **Needs changes**, extract the list of Blockers from the review and pass them to the `implementer` subagent as a fix list (along with the spec file path). Once the implementer finishes, invoke the `test-generator` again for any files it touched, then re-run the `code-reviewer`. Repeat this loop until the verdict is no longer **Needs changes**. After two failed review cycles, stop and present the outstanding blockers to the user for manual resolution rather than looping again.
+Merge the test review results with the implementation review from Step 5 into a single combined verdict:
+- If either review has **Blockers**, the combined verdict is **Needs changes**.
+- If both are **Approved** (with or without warnings), the combined verdict is the more conservative of the two.
+
+Present the full combined review output (PMD + implementation review + test review) to the user.
+
+## Step 6 — Review resolution loop
+
+If the combined verdict is **Approved** or **Approved with warnings**, the workflow continues to Step 7. Read the spec file, extract the **Manual test scenarios** section, and print it to the console so the user can walk through manual verification.
+
+If the combined verdict is **Needs changes**, extract all Blockers (from PMD, implementation review, and test review) and pass them to the `implementer` subagent as a fix list (along with the spec file path). Once the implementer finishes, re-run Step 5 (lint + test-gen + impl review in parallel) and Step 5b (test review). Repeat until the verdict is no longer **Needs changes**. After two failed review cycles, stop and present the outstanding blockers to the user for manual resolution rather than looping again.
 
 ## Step 7 — Manual testing & bug fixing (interactive loop)
 
