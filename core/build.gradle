@@ -1,5 +1,22 @@
+apply plugin: 'pmd'
+
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 eclipse.project.name = appName + '-core'
+
+pmd {
+  toolVersion = '7.2.0'
+  consoleOutput = true
+  ruleSetFiles = files("${project.rootDir}/quality/pmd/unstable-grid-ruleset.xml")
+  ruleSets = []
+}
+
+pmdMain {
+  source = sourceSets.main.allJava
+}
+
+pmdTest {
+  source = sourceSets.test.allJava
+}
 
 dependencies {
   api "com.badlogicgames.box2dlights:box2dlights:$box2dlightsVersion"

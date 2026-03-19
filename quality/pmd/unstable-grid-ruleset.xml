@@ -1,0 +1,162 @@
+<?xml version="1.0"?>
+<ruleset name="Unstable Grid Custom Rules"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+    <description>
+        Custom PMD rules enforcing Unstable Grid project conventions.
+        See .claude/agents/shared-conventions.md for the rationale behind each rule.
+    </description>
+
+    <!-- ================================================================
+         Rule 1: No object allocation in hot-path methods
+         Methods named simulate, draw, drawTextures, drawShapes, or update
+         (on VisualEffect subclasses) should not use 'new' to create objects.
+         Catches: new ArrayList(), new Vector2(), new Color(), etc.
+         ================================================================ -->
+    <rule name="NoAllocationInHotPath"
+          language="java"
+          message="Object allocation in hot-path method — runs every frame at 60+ FPS. Pre-allocate or use a pool."
+          class="net.sourceforge.pmd.lang.rule.xpath.XPathRule">
+        <description>
+            Detects 'new' expressions inside methods that run every frame (simulate, draw,
+            drawTextures, drawShapes, update on VisualEffect). Per shared-conventions.md
+            Performance Rules: "No object allocation inside simulate() or draw() called every frame."
+        </description>
+        <priority>2</priority>
+        <properties>
+            <property name="xpath">
+                <value><![CDATA[
+//MethodDeclaration[
+    pmd-java:matches(@Name, "^(simulate|draw|drawTextures|drawShapes)$")
+    or (
+        @Name = "update"
+        and ancestor::ClassDeclaration[
+            ExtendsList/ClassType[pmd-java:typeIs('com.skamaniak.ugfs.game.effect.VisualEffect')]
+        ]
+    )
+]//ConstructorCall
+                ]]></value>
+            </property>
+        </properties>
+    </rule>
+
+    <!-- ================================================================
+         Rule 2: No Gdx.* static access in pure-logic classes
+         Classes in simulation/ package, EnemyInstance, WaveManager,
+         TilePathfinder, NavigationUtils should not reference Gdx.*
+         ================================================================ -->
+    <rule name="NoGdxInPureLogic"
+          language="java"
+          message="Gdx.* access in pure-logic class — breaks unit testability. See shared-conventions.md Testing Boundaries."
+          class="net.sourceforge.pmd.lang.rule.xpath.XPathRule">
+        <description>
+            Pure-logic classes must not call Gdx.app, Gdx.files, Gdx.audio, etc.
+            These classes must remain unit-testable without a LibGDX runtime.
+        </description>
+        <priority>2</priority>
+        <properties>
+            <property name="xpath">
+                <value><![CDATA[
+//CompilationUnit[
+    .//ImportDeclaration[pmd-java:matches(@ImportedName, "^com\.badlogic\.gdx\.Gdx$")]
+]
+[
+    PackageDeclaration[pmd-java:matches(@Name, "^com\.skamaniak\.ugfs\.simulation")]
+    or .//ClassDeclaration[pmd-java:matches(@SimpleName, "^(WaveManager|TilePathfinder|NavigationUtils|EnemyInstance)$")]
+]
+                ]]></value>
+            </property>
+        </properties>
+    </rule>
+
+    <!-- ================================================================
+         Rule 3: No setters on GameAsset subclasses
+         Asset model classes are populated by JSON deserialization only.
+         Public setter methods (set*) are forbidden.
+         ================================================================ -->
+    <rule name="NoSettersOnGameAsset"
+          language="java"
+          message="Setter on GameAsset subclass — asset models are populated by JSON deserialization only."
+          class="net.sourceforge.pmd.lang.rule.xpath.XPathRule">
+        <description>
+            Asset model classes (extending GameAsset) must not have setter methods.
+            They are populated exclusively by LibGDX JSON deserialization.
+            Per shared-conventions.md: "Asset model classes have no setters."
+        </description>
+        <priority>2</priority>
+        <properties>
+            <property name="xpath">
+                <value><![CDATA[
+//ClassDeclaration[
+    ExtendsList/ClassType[pmd-java:typeIs('com.skamaniak.ugfs.asset.model.GameAsset')]
+]//MethodDeclaration[
+    starts-with(@Name, "set")
+    and @Visibility = "public"
+]
+                ]]></value>
+            </property>
+        </properties>
+    </rule>
+
+    <!-- ================================================================
+         Rule 4: No GameAssetManager in test code
+         Test classes should use TestAssetFactory, not GameAssetManager.
+         ================================================================ -->
+    <rule name="NoGameAssetManagerInTests"
+          language="java"
+          message="GameAssetManager used in test code — use TestAssetFactory for mocked assets instead."
+          class="net.sourceforge.pmd.lang.rule.xpath.XPathRule">
+        <description>
+            Test classes must not reference GameAssetManager. Use TestAssetFactory
+            to create mocked asset objects. Per shared-conventions.md Mocking Strategy.
+        </description>
+        <priority>2</priority>
+        <properties>
+            <property name="xpath">
+                <value><![CDATA[
+//CompilationUnit[
+    .//ImportDeclaration[pmd-java:matches(@ImportedName, "GameAssetManager$")]
+]
+[
+    .//ClassDeclaration[ends-with(@SimpleName, "Test")]
+]
+                ]]></value>
+            </property>
+        </properties>
+    </rule>
+
+    <!-- ================================================================
+         Rule 5: VisualEffect child spawning must use pendingEffects
+         Inside VisualEffect.update() methods, adding to the effects list
+         directly causes ConcurrentModificationException. Must use pendingEffects.
+         ================================================================ -->
+    <rule name="UsePendingEffectsInUpdate"
+          language="java"
+          message="Adding to effects list inside update() — use pendingEffects to avoid ConcurrentModificationException."
+          class="net.sourceforge.pmd.lang.rule.xpath.XPathRule">
+        <description>
+            VisualEffect subclasses must add child effects to pendingEffects during update(),
+            never to the live effects list. The effects list is being iterated with an Iterator
+            and direct adds cause ConcurrentModificationException.
+        </description>
+        <priority>1</priority>
+        <properties>
+            <property name="xpath">
+                <value><![CDATA[
+//ClassDeclaration[
+    ExtendsList/ClassType[pmd-java:typeIs('com.skamaniak.ugfs.game.effect.VisualEffect')]
+]//MethodDeclaration[@Name = "update"]
+    //MethodCall[@MethodName = "add"][
+        child::*[1][
+            self::FieldAccess[@Name = "effects"]
+            or self::VariableAccess[@Name = "effects"]
+        ]
+    ]
+                ]]></value>
+            </property>
+        </properties>
+    </rule>
+
+</ruleset>

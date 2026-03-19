@@ -13,12 +13,12 @@ public class PlasmaProjectileEffect extends VisualEffect {
     private final float startX, startY;
     private final EnemyInstance targetEnemy;
     private final int damage;
-    private final List<VisualEffect> effects;
+    private final List<VisualEffect> pendingEffects;
     private float currentX, currentY;
     private float lastKnownTargetX, lastKnownTargetY;
 
     public PlasmaProjectileEffect(float startX, float startY, EnemyInstance targetEnemy,
-                                  int damage, List<VisualEffect> effects) {
+                                  int damage, List<VisualEffect> pendingEffects) {
         // Duration is an upper bound; we kill it on arrival
         super(10f);
         this.startX = startX;
@@ -27,7 +27,7 @@ public class PlasmaProjectileEffect extends VisualEffect {
         this.currentY = startY;
         this.targetEnemy = targetEnemy;
         this.damage = damage;
-        this.effects = effects;
+        this.pendingEffects = pendingEffects;
         this.lastKnownTargetX = targetEnemy.getWorldCenter().x;
         this.lastKnownTargetY = targetEnemy.getWorldCenter().y;
     }
@@ -56,7 +56,7 @@ public class PlasmaProjectileEffect extends VisualEffect {
             if (targetEnemy.isAlive()) {
                 targetEnemy.takeDamage(damage);
             }
-            effects.add(new ImpactEffect(currentX, currentY));
+            pendingEffects.add(new ImpactEffect(currentX, currentY));
             alive = false;
         } else {
             float ratio = step / dist;
